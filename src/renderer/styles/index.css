@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #4F46E5;
+  --color-primary-light: #818CF8;
+  --color-primary-dark: #3730A3;
+  --color-surface: #F8FAFC;
+  --color-surface-card: #FFFFFF;
+  --color-text: #1E293B;
+  --color-text-secondary: #64748B;
+  --color-border: #E2E8F0;
+  --color-bg-hover: #F1F5F9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: #0F172A;
+    --color-surface-card: #1E293B;
+    --color-text: #F1F5F9;
+    --color-text-secondary: #94A3B8;
+    --color-border: #334155;
+    --color-bg-hover: #334155;
+  }
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  border-radius: 12px;
+  background: var(--color-surface-card);
+  color: var(--color-text);
+}
+
+.rest-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(102, 126, 234, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-app-region: drag;
+  overflow: hidden;
+  animation: restFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .rest-root {
+    background: rgba(30, 27, 75, 0.95);
+  }
+}
+
+.rest-root button,
+.rest-root label,
+.rest-root input {
+  -webkit-app-region: no-drag;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes restFadeIn {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes restSlideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-rest-slide-up {
+  animation: restSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
