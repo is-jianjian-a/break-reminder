@@ -14,6 +14,11 @@ export default function App() {
     <AppProvider>
       <div className="flex flex-col h-screen bg-[var(--color-surface)]">
         <div className="h-6 flex-shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
+        <div className="flex-shrink-0 flex justify-center -mt-1">
+          <svg width="12" height="6" viewBox="0 0 12 6" className="fill-[var(--color-surface-card)]">
+            <path d="M0 6 L6 0 L12 6 Z" />
+          </svg>
+        </div>
         <Navigation />
         <div className="flex-1 overflow-auto">
           <Routes>

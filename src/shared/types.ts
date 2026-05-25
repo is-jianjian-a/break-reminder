@@ -12,6 +12,7 @@ export interface AppConfig {
   weakToStrongDelaySec: number
   soundEnabled: boolean
   enabledDays: number[]
+  shortcutKey: string
 }
 
 export interface ActionRecord {
@@ -30,7 +31,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   remindIntervalMin: 30,
   weakToStrongDelaySec: 60,
   soundEnabled: true,
-  enabledDays: [1, 2, 3, 4, 5]
+  enabledDays: [1, 2, 3, 4, 5],
+  shortcutKey: 'CmdOrCtrl+Shift+B'
 }
 
 export interface DailyStats {

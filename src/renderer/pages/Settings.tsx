@@ -167,6 +167,15 @@ export default function Settings() {
             />
           </button>
         </div>
+
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-[var(--color-text)]">快捷键</label>
+          <div className="flex items-center gap-2">
+            <kbd className="px-2 py-1 bg-[var(--color-bg-hover)] border border-[var(--color-border)] rounded text-xs text-[var(--color-text-secondary)] font-mono">
+              {localConfig.shortcutKey || 'CmdOrCtrl+Shift+B'}
+            </kbd>
+          </div>
+        </div>
       </div>
 
       <button

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen } from 'electron'
+import { app, BrowserWindow, ipcMain, screen, shell, globalShortcut } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { TimerEngine } from './timer-engine'
 import { NotificationManager } from './notification-manager'
@@ -53,6 +53,7 @@ function triggerRestNow(): void {
   const rw = getRestWindow()
   rw.show()
   rw.focus()
+  if (storeService.getConfig().soundEnabled) { shell.beep() }
   const sendRestMode = () => {
     if (!isWindowDestroyed(restWindow)) {
       restWindow!.webContents.send('show-rest-mode')
@@ -94,6 +95,7 @@ function positionMainWindow(): void {
 
 app.on('before-quit', () => {
   isQuitting = true
+  globalShortcut.unregisterAll()
   clearRestAutoSkipTimer()
   timerEngine?.destroy()
   notificationManager?.destroy()
@@ -120,6 +122,13 @@ app.whenReady().then(() => {
   trayManager = new TrayManager(mainWindow, showMainWindow)
 
   timerEngine = new TimerEngine(storeService)
+
+  const shortcutKey = storeService.getConfig().shortcutKey || 'CmdOrCtrl+Shift+B'
+  try {
+    globalShortcut.register(shortcutKey, () => {
+      triggerRestNow()
+    })
+  } catch {}
 
   timerEngine.onStatusChange = (_status) => {
   }
@@ -221,6 +230,13 @@ app.whenReady().then(() => {
 
   ipcMain.on('reload-config', () => {
     timerEngine.reloadConfig()
+    const newShortcut = storeService.getConfig().shortcutKey || 'CmdOrCtrl+Shift+B'
+    globalShortcut.unregisterAll()
+    try {
+      globalShortcut.register(newShortcut, () => {
+        triggerRestNow()
+      })
+    } catch {}
   })
 
   ipcMain.on('quit-app', () => {

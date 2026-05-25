@@ -5,9 +5,11 @@ import { isWindowDestroyed } from './utils'
 
 export class WindowManager {
   createMainWindow(isQuitting: () => boolean): BrowserWindow {
+    const { height: screenHeight } = screen.getPrimaryDisplay().workAreaSize
+
     const mainWindow = new BrowserWindow({
       width: 480,
-      height: 720,
+      height: screenHeight,
       show: false,
       resizable: false,
       frame: false,

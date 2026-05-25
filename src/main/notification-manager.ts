@@ -1,4 +1,4 @@
-import { BrowserWindow, Notification } from 'electron'
+import { BrowserWindow, Notification, shell } from 'electron'
 import { AppConfig } from '../shared/types'
 import { isWindowDestroyed } from './utils'
 
@@ -43,6 +43,7 @@ export class NotificationManager {
 
     this.weakTimeout = setTimeout(() => {
       if (this.destroyed) return
+      if (config.soundEnabled) { shell.beep() }
       if (this.onShowRestWindow) {
         this.onShowRestWindow()
       } else {

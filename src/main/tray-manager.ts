@@ -2,12 +2,12 @@ import { Tray, nativeImage, BrowserWindow } from 'electron'
 import { isWindowDestroyed } from './utils'
 
 function createTrayIcon(): nativeImage {
-  const size = 22
+  const size = 32
   const buf = Buffer.alloc(size * size * 4, 0)
   const cx = size / 2
   const cy = size / 2
-  const outerR = size * 0.42
-  const innerR = size * 0.32
+  const outerR = size * 0.44
+  const innerR = size * 0.34
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -93,7 +93,7 @@ export class TrayManager {
 
   private createTray(): void {
     const icon = createTrayIcon()
-    const templateIcon = icon.resize({ width: 16, height: 16 })
+    const templateIcon = icon.resize({ width: 22, height: 22 })
     templateIcon.setTemplateImage(true)
     this.tray = new Tray(templateIcon)
     this.tray.setToolTip('Break Reminder - 点击打开')

@@ -2,8 +2,20 @@ import { useState, useEffect } from 'react'
 import { useApp } from '../contexts/AppContext'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
+function useIsDark() {
+  const [isDark, setIsDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
+  useEffect(() => {
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+  return isDark
+}
+
 function WalkTimer({ startTime }: { startTime: number }) {
   const [elapsed, setElapsed] = useState(() => Math.floor((Date.now() - startTime) / 1000))
+  const isDark = useIsDark()
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -26,7 +38,7 @@ function WalkTimer({ startTime }: { startTime: number }) {
           cx="48"
           cy="48"
           r="45"
-          stroke="#d1fae5"
+          stroke={isDark ? '#1E293B' : '#d1fae5'}
           strokeWidth="6"
           fill="none"
         />
@@ -34,7 +46,7 @@ function WalkTimer({ startTime }: { startTime: number }) {
           cx="48"
           cy="48"
           r="45"
-          stroke="#10b981"
+          stroke={isDark ? '#34D399' : '#10b981'}
           strokeWidth="6"
           fill="none"
           strokeLinecap="round"
@@ -46,7 +58,7 @@ function WalkTimer({ startTime }: { startTime: number }) {
           x="48"
           y="54"
           textAnchor="middle"
-          className="fill-emerald-700"
+          fill={isDark ? '#F1F5F9' : '#15803d'}
           style={{ fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}
         >
           {String(min).padStart(2, '0')}:{String(sec).padStart(2, '0')}
@@ -58,6 +70,7 @@ function WalkTimer({ startTime }: { startTime: number }) {
 
 export default function Dashboard() {
   const { stats, refreshStats, timerState, walkStatus, streakDays, weekComparison } = useApp()
+  const isDark = useIsDark()
 
   const today = stats[0] || {
     date: new Date().toISOString().split('T')[0],
@@ -83,6 +96,7 @@ export default function Dashboard() {
     const totalSec = Math.max(0, Math.floor(ms / 1000))
     const min = Math.floor(totalSec / 60)
     const sec = totalSec % 60
+    if (min > 10) return `${min}分`
     return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
   }
 
@@ -91,11 +105,11 @@ export default function Dashboard() {
     ? Math.min(timerState.workTimerMs / timerState.remindIntervalMs, 1)
     : 0
   const isUrgent = timerState.isWorking && remaining <= 5 * 60 * 1000
-  const progressColor = !timerState.isWorking
-    ? 'bg-gray-400'
+  const progressStyle = !timerState.isWorking
+    ? { backgroundImage: 'linear-gradient(to right, #9CA3AF, #9CA3AF)' }
     : isUrgent
-      ? 'bg-amber-500'
-      : 'bg-indigo-600'
+      ? { backgroundImage: 'linear-gradient(to right, #F59E0B, #FBBF24)' }
+      : { backgroundImage: 'linear-gradient(to right, #4F46E5, #818CF8)' }
 
   const chartData = [...stats].reverse().map((d) => ({
     date: d.date.slice(5),
@@ -136,23 +150,21 @@ export default function Dashboard() {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-[var(--color-surface-card)] rounded-xl p-4 shadow-sm border border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-[var(--color-text)]">
               {timerState.isWorking ? '距下次休息' : '当前状态'}
             </span>
             <span className="text-sm text-[var(--color-text-secondary)] whitespace-nowrap">
               {timerState.isWorking
-                ? isUrgent
-                  ? '即将提醒'
-                  : formatCountdown(remaining)
+                ? formatCountdown(remaining)
                 : '🌙 非工作时段'}
             </span>
           </div>
-          <div className="w-full h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-[var(--color-border)] rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-1000 ${progressColor}`}
-              style={{ width: `${progress * 100}%` }}
+              className="h-full rounded-full transition-all duration-1000"
+              style={{ ...progressStyle, width: `${progress * 100}%` }}
             />
           </div>
         </div>
@@ -207,11 +219,11 @@ export default function Dashboard() {
         <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">本周趋势</h3>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e2e8f0'} strokeOpacity={0.3} />
+            <XAxis dataKey="date" tick={{ fontSize: 12, fill: isDark ? '#94A3B8' : '#64748B' }} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: isDark ? '#94A3B8' : '#64748B' }} />
+            <Tooltip contentStyle={{ backgroundColor: isDark ? '#1E293B' : '#fff', border: 'none', borderRadius: '8px', color: isDark ? '#F1F5F9' : '#1E293B' }} />
+            <Legend iconType="circle" wrapperStyle={{ fontSize: 12, color: isDark ? '#94A3B8' : '#64748B' }} />
             <Line type="monotone" dataKey="站一站" stroke="#4F46E5" strokeWidth={2} dot={{ r: 3 }} />
             <Line type="monotone" dataKey="走一走" stroke="#059669" strokeWidth={2} dot={{ r: 3 }} />
             <Line type="monotone" dataKey="装个水" stroke="#D97706" strokeWidth={2} dot={{ r: 3 }} />
