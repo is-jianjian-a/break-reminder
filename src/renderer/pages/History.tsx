@@ -165,70 +165,77 @@ export default function History() {
       {dayRecords.length === 0 ? (
         <div className="text-center text-[var(--color-text-secondary)] py-12">该日暂无记录</div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-3">
           {(['morning', 'afternoon', 'evening'] as const).map((period) => {
             const periodRecords = dayRecords.filter(r => getTimePeriod(r.timestamp) === period)
-            if (periodRecords.length === 0) return null
             const meta = PERIOD_META[period]
             return (
-              <div key={period}>
-                <div className="flex items-center gap-2 mb-2">
+              <div key={period} className="bg-[var(--color-surface-card)] rounded-xl p-3 border border-[var(--color-border)]">
+                <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-[var(--color-border)]">
                   <span className="text-sm">{meta.emoji}</span>
-                  <span className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">{meta.label}</span>
-                  <span className="text-xs text-[var(--color-text-secondary)]">{periodRecords.length} 条</span>
+                  <span className="text-xs font-semibold text-[var(--color-text-secondary)]">{meta.label}</span>
+                  {periodRecords.length > 0 && (
+                    <span className="text-xs text-[var(--color-text-secondary)]">{periodRecords.length}条</span>
+                  )}
                 </div>
-                <div className="space-y-1.5">
-                  {periodRecords.map((record) => (
-                    <div
-                      key={record.id}
-                      className="flex items-center gap-3 bg-[var(--color-surface-card)] rounded-lg px-4 py-2.5 shadow-sm border border-[var(--color-border)] group"
-                    >
-                      <span className="text-lg">{ACTION_ICONS[record.type]}</span>
-                      <span className="text-sm font-medium text-[var(--color-text)]">
-                        {ACTION_LABELS[record.type]}
-                      </span>
-                      {record.type === 'walk' && record.durationSec ? (
-                        editingId === record.id ? (
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              min="0"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveDuration(record.id)
-                                if (e.key === 'Escape') handleCancelEdit()
-                              }}
-                              className="w-12 border border-indigo-300 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-[var(--color-surface-card)] text-[var(--color-text)]"
-                              autoFocus
-                            />
-                            <span className="text-xs text-[var(--color-text-secondary)]">分</span>
-                            <button onClick={() => handleSaveDuration(record.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
-                            <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
-                          </div>
-                        ) : (
-                          <span
-                            className="text-xs text-[var(--color-text-secondary)] cursor-pointer hover:text-indigo-600 transition-colors"
-                            onClick={() => handleEditDuration(record)}
-                            title="点击修改时长"
-                          >
-                            {formatDuration(record.durationSec)}
-                          </span>
-                        )
-                      ) : record.durationSec ? (
-                        <span className="text-xs text-[var(--color-text-secondary)]">{formatDuration(record.durationSec)}</span>
-                      ) : null}
-                      <span className="ml-auto text-xs text-[var(--color-text-secondary)]">{formatTime(record.timestamp)}</span>
-                      <button
-                        onClick={() => handleDelete(record.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-sm ml-2"
-                        title="删除"
+                {periodRecords.length === 0 ? (
+                  <div className="text-xs text-[var(--color-text-secondary)] text-center py-4 opacity-50">暂无</div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {periodRecords.map((record) => (
+                      <div
+                        key={record.id}
+                        className="flex flex-col gap-0.5 rounded-lg px-2.5 py-2 group"
                       >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{ACTION_ICONS[record.type]}</span>
+                          <span className="text-xs font-medium text-[var(--color-text)]">
+                            {ACTION_LABELS[record.type]}
+                          </span>
+                          <span className="ml-auto text-xs text-[var(--color-text-secondary)]">{formatTime(record.timestamp)}</span>
+                        </div>
+                        {record.type === 'walk' && record.durationSec ? (
+                          editingId === record.id ? (
+                            <div className="flex items-center gap-1 pl-7">
+                              <input
+                                type="number"
+                                min="0"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveDuration(record.id)
+                                  if (e.key === 'Escape') handleCancelEdit()
+                                }}
+                                className="w-12 border border-indigo-300 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-[var(--color-surface-card)] text-[var(--color-text)]"
+                                autoFocus
+                              />
+                              <span className="text-xs text-[var(--color-text-secondary)]">分</span>
+                              <button onClick={() => handleSaveDuration(record.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
+                              <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
+                            </div>
+                          ) : (
+                            <span
+                              className="text-xs text-[var(--color-text-secondary)] cursor-pointer hover:text-indigo-600 transition-colors pl-7"
+                              onClick={() => handleEditDuration(record)}
+                              title="点击修改时长"
+                            >
+                              {formatDuration(record.durationSec)}
+                            </span>
+                          )
+                        ) : record.durationSec ? (
+                          <span className="text-xs text-[var(--color-text-secondary)] pl-7">{formatDuration(record.durationSec)}</span>
+                        ) : null}
+                        <button
+                          onClick={() => handleDelete(record.id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-xs self-end"
+                          title="删除"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })}

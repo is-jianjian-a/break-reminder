@@ -84,72 +84,74 @@ export default function RestMode() {
 
   return (
     <div className="rest-root">
-      {isWalking ? (
-        <div className="flex flex-col items-center justify-center gap-8 animate-rest-slide-up">
-          <div className="text-8xl">🚶</div>
-          <div className="text-4xl font-bold text-white">走一走进行中</div>
-          <div className="text-7xl font-mono font-bold text-white tabular-nums animate-pulse-slow">
-            {formatTime(walkElapsed)}
-          </div>
-          <button
-            onClick={handleWalkComplete}
-            className="mt-6 px-16 py-5 bg-white text-indigo-700 rounded-2xl text-2xl font-bold hover:bg-indigo-50 transition-all duration-300 shadow-2xl hover:scale-105 active:scale-95"
-          >
-            ✅ 结束走路
-          </button>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-8 animate-rest-slide-up">
-          <div className="text-8xl animate-bounce">⏰</div>
-          <div className="text-4xl font-bold text-white">该休息一下啦！</div>
-          {encouragement && (
-            <div className="text-xl text-white/80">{encouragement}</div>
-          )}
-
-          <div className="flex gap-8 mt-4">
+      <div className="bg-white rounded-3xl shadow-lg p-8 w-[400px] border border-gray-200 animate-rest-slide-up">
+        {isWalking ? (
+          <div className="flex flex-col items-center justify-center gap-6">
+            <div className="text-6xl">🚶</div>
+            <div className="text-2xl font-bold text-gray-800">走一走进行中</div>
+            <div className="text-6xl font-mono font-bold text-indigo-600 tabular-nums animate-pulse-slow">
+              {formatTime(walkElapsed)}
+            </div>
             <button
-              onClick={handleStand}
-              className={`flex flex-col items-center gap-4 w-52 py-10 rounded-3xl border-3 transition-all duration-300 ${
-                selectedAction === 'stand'
-                  ? 'border-white bg-white/25 shadow-2xl scale-105'
-                  : 'border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50 hover:scale-102'
-              }`}
+              onClick={handleWalkComplete}
+              className="mt-6 px-16 py-5 bg-indigo-600 text-white rounded-2xl text-2xl font-bold hover:bg-indigo-700 transition-all duration-300 shadow-2xl hover:scale-105 active:scale-95"
             >
-              <span className="text-7xl">🧍</span>
-              <span className="text-2xl font-bold text-white">站一站</span>
-            </button>
-
-            <button
-              onClick={handleWalk}
-              className={`flex flex-col items-center gap-4 w-52 py-10 rounded-3xl border-3 transition-all duration-300 ${
-                selectedAction === 'walk'
-                  ? 'border-white bg-white/25 shadow-2xl scale-105'
-                  : 'border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50 hover:scale-102'
-              }`}
-            >
-              <span className="text-7xl">🚶</span>
-              <span className="text-2xl font-bold text-white">走一走</span>
+              ✅ 结束走路
             </button>
           </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-5">
+            <div className="text-6xl animate-bounce">⏰</div>
+            <div className="text-2xl font-bold text-gray-800">该休息一下啦！</div>
+            {encouragement && (
+              <div className="text-base text-gray-500">{encouragement}</div>
+            )}
 
-          <label className="flex items-center gap-3 cursor-pointer mt-4">
-            <input
-              type="checkbox"
-              checked={waterChecked}
-              onChange={(e) => setWaterChecked(e.target.checked)}
-              className="w-7 h-7 rounded border-white/50 text-indigo-600 focus:ring-indigo-500 bg-white/20"
-            />
-            <span className="text-2xl text-white">🥤 装个水</span>
-          </label>
+            <div className="flex gap-6 mt-4">
+              <button
+                onClick={handleStand}
+                className={`flex flex-col items-center gap-3 w-44 py-8 rounded-3xl border-3 transition-all duration-300 ${
+                  selectedAction === 'stand'
+                    ? 'border-indigo-400 bg-indigo-50 shadow-2xl scale-105'
+                    : 'border-gray-200 bg-gray-50 hover:bg-indigo-50 hover:border-indigo-300 hover:scale-102'
+                }`}
+              >
+                <span className="text-5xl">🧍</span>
+                <span className="text-lg font-bold text-gray-700">站一站</span>
+              </button>
 
-          <button
-            onClick={handleSkip}
-            className="text-xl text-white/50 hover:text-white/80 transition-all duration-300 mt-4 hover:scale-105"
-          >
-            跳过本次
-          </button>
-        </div>
-      )}
+              <button
+                onClick={handleWalk}
+                className={`flex flex-col items-center gap-3 w-44 py-8 rounded-3xl border-3 transition-all duration-300 ${
+                  selectedAction === 'walk'
+                    ? 'border-indigo-400 bg-indigo-50 shadow-2xl scale-105'
+                    : 'border-gray-200 bg-gray-50 hover:bg-indigo-50 hover:border-indigo-300 hover:scale-102'
+                }`}
+              >
+                <span className="text-5xl">🚶</span>
+                <span className="text-lg font-bold text-gray-700">走一走</span>
+              </button>
+            </div>
+
+            <label className="flex items-center gap-3 cursor-pointer mt-4">
+              <input
+                type="checkbox"
+                checked={waterChecked}
+                onChange={(e) => setWaterChecked(e.target.checked)}
+                className="w-7 h-7 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-lg text-gray-700">🥤 装个水</span>
+            </label>
+
+            <button
+              onClick={handleSkip}
+              className="text-base text-gray-400 hover:text-gray-600 transition-all duration-300 mt-4 hover:scale-105"
+            >
+              跳过本次
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
