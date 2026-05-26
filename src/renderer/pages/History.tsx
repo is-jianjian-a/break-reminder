@@ -46,7 +46,7 @@ interface TimelineItem {
   type: 'hour' | 'record'
   minutes: number
   hour?: number
-  record?: ActionRecord
+  records?: ActionRecord[]
 }
 
 function buildTimelineItems(displayStart: number, displayEnd: number, records: ActionRecord[]): TimelineItem[] {
@@ -59,9 +59,15 @@ function buildTimelineItems(displayStart: number, displayEnd: number, records: A
       items.push({ type: 'hour', minutes: hMin, hour: h })
     }
   }
+  const grouped = new Map<number, ActionRecord[]>()
   for (const record of records) {
     const d = new Date(record.timestamp)
-    items.push({ type: 'record', minutes: d.getHours() * 60 + d.getMinutes(), record })
+    const key = d.getHours() * 60 + d.getMinutes()
+    if (!grouped.has(key)) grouped.set(key, [])
+    grouped.get(key)!.push(record)
+  }
+  for (const [minutes, recs] of grouped) {
+    items.push({ type: 'record', minutes, records: recs })
   }
   items.sort((a, b) => a.minutes - b.minutes || (a.type === 'hour' ? -1 : 1))
   return items
@@ -266,14 +272,14 @@ export default function History() {
                 )}
               </div>
 
-              <div className="relative pl-7">
-                <div className="absolute left-[11px] top-0 bottom-0 w-px bg-[var(--color-border)]" />
+              <div className="relative pl-6">
+                <div className="absolute left-[7px] top-0 bottom-0 w-px bg-[var(--color-border)]" />
 
-                {items.map((item) => {
+                {items.map((item, idx) => {
                   if (item.type === 'hour') {
                     return (
                       <div key={`h-${item.hour}`} className="relative flex items-center h-7">
-                        <div className="absolute left-[8px] w-3 h-px bg-[var(--color-text-secondary)] opacity-30" />
+                        <div className="absolute left-[4px] w-3 h-px bg-[var(--color-text-secondary)] opacity-30" />
                         <span className="text-[10px] text-[var(--color-text-secondary)] opacity-40 font-mono select-none">
                           {String(item.hour).padStart(2, '0')}:00
                         </span>
@@ -281,27 +287,34 @@ export default function History() {
                     )
                   }
 
-                  const record = item.record!
-                  const isEditing = editingId === record.id
+                  const recs = item.records!
+                  const firstRec = recs[0]
+                  const hasWalk = recs.some(r => r.type === 'walk')
+                  const walkRec = recs.find(r => r.type === 'walk')
+                  const isEditing = walkRec && editingId === walkRec.id
+                  const dotColor = hasWalk ? DOT_COLORS.walk : DOT_COLORS[recs[0].type]
 
                   return (
-                    <div key={record.id} className="relative flex items-center py-1.5 group">
-                      <div className={`absolute left-[7px] w-2.5 h-2.5 rounded-full ${DOT_COLORS[record.type]} ring-2 ring-[var(--color-surface-card)]`} />
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <div key={`r-${idx}`} className="relative flex items-center py-1.5 group">
+                      <div className={`absolute left-[3px] w-3 h-3 rounded-full ${dotColor} ring-2 ring-[var(--color-surface-card)]`} />
+                      <div className="flex items-center gap-1 min-w-0 flex-1">
                         <span className="text-[11px] text-[var(--color-text-secondary)] font-mono shrink-0">
-                          {formatTime(record.timestamp)}
+                          {formatTime(firstRec.timestamp)}
                         </span>
-                        <ActionIcon type={record.type} size={13} />
-                        <span className="text-xs text-[var(--color-text)] truncate">{ACTION_LABELS[record.type]}</span>
-                        {record.type === 'walk' && record.durationSec && !isEditing && (
+                        <div className="flex items-center gap-0.5">
+                          {recs.map(r => (
+                            <ActionIcon key={r.id} type={r.type} size={13} />
+                          ))}
+                        </div>
+                        {walkRec && walkRec.durationSec && !isEditing && (
                           <span
                             className="text-[10px] text-[var(--color-text-secondary)] cursor-pointer hover:text-indigo-500 transition-colors shrink-0"
-                            onClick={() => handleEditDuration(record)}
+                            onClick={() => handleEditDuration(walkRec)}
                           >
-                            {formatDuration(record.durationSec)}
+                            {formatDuration(walkRec.durationSec)}
                           </span>
                         )}
-                        {isEditing && (
+                        {isEditing && walkRec && (
                           <div className="flex items-center gap-1 shrink-0">
                             <input
                               type="number"
@@ -309,19 +322,19 @@ export default function History() {
                               value={editValue}
                               onChange={(e) => setEditValue(e.target.value)}
                               onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveDuration(record.id)
+                                if (e.key === 'Enter') handleSaveDuration(walkRec!.id)
                                 if (e.key === 'Escape') handleCancelEdit()
                               }}
                               className="w-12 border border-indigo-300 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-[var(--color-surface-card)] text-[var(--color-text)]"
                               autoFocus
                             />
                             <span className="text-[10px] text-[var(--color-text-secondary)]">分</span>
-                            <button onClick={() => handleSaveDuration(record.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
+                            <button onClick={() => handleSaveDuration(walkRec!.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
                             <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
                           </div>
                         )}
                         <button
-                          onClick={() => handleDelete(record.id)}
+                          onClick={() => { recs.forEach(r => handleDelete(r.id)) }}
                           className="opacity-0 group-hover:opacity-100 ml-auto shrink-0 w-4 h-4 flex items-center justify-center text-red-400 hover:text-red-600 transition-all text-[10px]"
                         >
                           ✕

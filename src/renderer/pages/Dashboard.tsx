@@ -212,11 +212,11 @@ export default function Dashboard() {
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[var(--color-text)]">🏃 今日活动</span>
           <span className="text-lg font-bold text-indigo-600">
-            {formatDuration(today.standCount * 60 + today.walkDurationSec)}
+            {formatDuration(today.walkDurationSec)}
           </span>
         </div>
         <div className="text-xs text-[var(--color-text-secondary)] mt-1">
-          站 {today.standCount} 次 + 走 {formatDuration(today.walkDurationSec)}
+          走 {formatDuration(today.walkDurationSec)}
         </div>
       </div>
 
