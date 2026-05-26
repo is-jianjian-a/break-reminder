@@ -272,30 +272,31 @@ export default function History() {
                 {items.map((item, idx) => {
                   if (item.type === 'hour') {
                     return (
-                      <div key={`h-${item.hour}`} className="relative flex items-center h-7">
+                      <div key={`h-${item.hour}`} className="relative flex items-center h-4">
                         <div className="absolute left-[7px] w-3 h-px bg-[var(--color-text-secondary)] opacity-30" />
-                        <span className="text-[10px] text-[var(--color-text-secondary)] opacity-40 font-mono select-none">
-                          {String(item.hour).padStart(2, '0')}:00
-                        </span>
                       </div>
                     )
                   }
 
                   const recs = item.records!
                   const firstRec = recs[0]
+                  const waterRec = recs.find(r => r.type === 'water')
                   const walkRec = recs.find(r => r.type === 'walk')
+                  const standRec = recs.find(r => r.type === 'stand')
                   const isEditing = walkRec && editingId === walkRec.id
 
                   return (
                     <div key={`r-${idx}`} className="relative flex items-center py-1.5 group">
                       <div className="flex items-center gap-1 min-w-0 flex-1">
+                        <span className="w-4 shrink-0 flex items-center justify-center">
+                          {waterRec ? <ActionIcon type="water" size={13} /> : null}
+                        </span>
                         <span className="text-[11px] text-[var(--color-text-secondary)] font-mono shrink-0">
                           {formatTime(firstRec.timestamp)}
                         </span>
                         <div className="flex items-center gap-0.5">
-                          {recs.map(r => (
-                            <ActionIcon key={r.id} type={r.type} size={13} />
-                          ))}
+                          {standRec && <ActionIcon type={standRec.type} size={13} />}
+                          {walkRec && <ActionIcon type={walkRec.type} size={13} />}
                         </div>
                         {walkRec && walkRec.durationSec && !isEditing && (
                           <span
