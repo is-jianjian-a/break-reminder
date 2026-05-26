@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, screen, shell, globalShortcut } from 'electron'
+import { execSync } from 'node:child_process'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { TimerEngine } from './timer-engine'
 import { NotificationManager } from './notification-manager'
@@ -198,6 +199,14 @@ app.whenReady().then(() => {
       if (mainWindow && !isWindowDestroyed(mainWindow)) {
         mainWindow.webContents.send('walk-status', { isWalking: true, startTime: Date.now() })
       }
+    }
+  })
+
+  ipcMain.on('display-sleep', () => {
+    try {
+      execSync('pmset displaysleepnow')
+    } catch (e) {
+      console.error('Failed to execute displaysleepnow:', e)
     }
   })
 

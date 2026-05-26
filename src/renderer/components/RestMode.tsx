@@ -23,6 +23,7 @@ export default function RestMode() {
   const [walkElapsed, setWalkElapsed] = useState(0)
   const [waterChecked, setWaterChecked] = useState(false)
   const [selectedAction, setSelectedAction] = useState<'stand' | 'walk' | null>(null)
+  const [screenCountdown, setScreenCountdown] = useState(0)
   const [encouragement, setEncouragement] = useState(
     encouragements[Math.floor(Math.random() * encouragements.length)]
   )
@@ -66,7 +67,21 @@ export default function RestMode() {
   const handleWalk = useCallback(() => {
     setSelectedAction('walk')
     ipc()?.send('rest-action', { action: 'walk', waterChecked })
+    setScreenCountdown(3)
   }, [waterChecked])
+
+  useEffect(() => {
+    if (screenCountdown <= 0) return
+    if (screenCountdown === 1) {
+      const timer = setTimeout(() => {
+        setScreenCountdown(0)
+        ipc()?.send('display-sleep')
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+    const timer = setTimeout(() => setScreenCountdown(screenCountdown - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [screenCountdown])
 
   const handleWalkComplete = useCallback(() => {
     ipc()?.send('walk-complete', walkElapsed)
@@ -89,15 +104,26 @@ export default function RestMode() {
           <div className="flex flex-col items-center justify-center gap-6">
             <div className="text-6xl">🚶</div>
             <div className="text-2xl font-bold text-gray-800">走一走进行中</div>
-            <div className="text-6xl font-mono font-bold text-indigo-600 tabular-nums animate-pulse-slow">
-              {formatTime(walkElapsed)}
-            </div>
-            <button
-              onClick={handleWalkComplete}
-              className="mt-6 px-16 py-5 bg-indigo-600 text-white rounded-2xl text-2xl font-bold hover:bg-indigo-700 transition-all duration-300 shadow-2xl hover:scale-105 active:scale-95"
-            >
-              ✅ 结束走路
-            </button>
+            {screenCountdown > 0 ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-7xl font-mono font-bold text-amber-500 tabular-nums animate-pulse">
+                  {screenCountdown}
+                </div>
+                <div className="text-lg text-gray-500">屏幕即将关闭...</div>
+              </div>
+            ) : (
+              <>
+                <div className="text-6xl font-mono font-bold text-indigo-600 tabular-nums animate-pulse-slow">
+                  {formatTime(walkElapsed)}
+                </div>
+                <button
+                  onClick={handleWalkComplete}
+                  className="mt-6 px-16 py-5 bg-indigo-600 text-white rounded-2xl text-2xl font-bold hover:bg-indigo-700 transition-all duration-300 shadow-2xl hover:scale-105 active:scale-95"
+                >
+                  ✅ 结束走路
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-5">

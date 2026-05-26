@@ -23,7 +23,7 @@ contextBridge.exposeInMainWorld('electron', {
       return Promise.reject(new Error(`Invalid IPC channel: ${channel}`))
     },
     send: (channel: string, ...args: unknown[]) => {
-      const validChannels = ['rest-action', 'walk-complete', 'open-main-window', 'trigger-rest-now', 'trigger-remind-now', 'reload-config', 'quit-app']
+      const validChannels = ['rest-action', 'walk-complete', 'open-main-window', 'trigger-rest-now', 'trigger-remind-now', 'reload-config', 'quit-app', 'display-sleep']
       if (validChannels.includes(channel)) {
         ipcRenderer.send(channel, ...args)
       }
