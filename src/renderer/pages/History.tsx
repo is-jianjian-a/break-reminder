@@ -279,7 +279,7 @@ export default function History() {
                   if (item.type === 'hour') {
                     return (
                       <div key={`h-${item.hour}`} className="relative flex items-center h-7">
-                        <div className="absolute left-[4px] w-3 h-px bg-[var(--color-text-secondary)] opacity-30" />
+                        <div className="absolute left-[7px] w-3 h-px bg-[var(--color-text-secondary)] opacity-30" />
                         <span className="text-[10px] text-[var(--color-text-secondary)] opacity-40 font-mono select-none">
                           {String(item.hour).padStart(2, '0')}:00
                         </span>
@@ -296,7 +296,7 @@ export default function History() {
 
                   return (
                     <div key={`r-${idx}`} className="relative flex items-center py-1.5 group">
-                      <div className={`absolute left-[3px] w-3 h-3 rounded-full ${dotColor} ring-2 ring-[var(--color-surface-card)]`} />
+                      <div className={`absolute left-[1.5px] w-3 h-3 rounded-full ${dotColor} ring-2 ring-[var(--color-surface-card)]`} />
                       <div className="flex items-center gap-1 min-w-0 flex-1">
                         <span className="text-[11px] text-[var(--color-text-secondary)] font-mono shrink-0">
                           {formatTime(firstRec.timestamp)}
