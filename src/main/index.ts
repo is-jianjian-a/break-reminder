@@ -203,7 +203,8 @@ app.whenReady().then(() => {
 
   ipcMain.on('walk-complete', (_event, durationSec: number) => {
     clearRestAutoSkipTimer()
-    storeService.addRecord({ type: 'walk', timestamp: Date.now(), durationSec })
+    const walkStartTime = Date.now() - durationSec * 1000
+    storeService.addRecord({ type: 'walk', timestamp: walkStartTime, durationSec })
     timerEngine.resumeFromWalk()
     if (restWindow && !isWindowDestroyed(restWindow)) {
       notificationManager.dismissReminder(restWindow)
