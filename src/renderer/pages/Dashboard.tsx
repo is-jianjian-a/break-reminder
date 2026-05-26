@@ -175,7 +175,8 @@ export default function Dashboard() {
           <div className="text-xl mb-1">🧍</div>
           <div className="text-2xl font-bold text-indigo-600">{today.standCount}</div>
           <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">站一站 · 今日</div>
-          <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">本周 {weekStand} 次</div>
+          <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">&nbsp;</div>
+          <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">本周 {weekStand} 次</div>
           <div className="w-full h-1 bg-[var(--color-border)] rounded-full mt-2 overflow-hidden">
             <div className="h-full rounded-full" style={{ backgroundImage: 'linear-gradient(to right, #4F46E5, #818CF8)', width: `${Math.min(today.standCount / 8 * 100, 100)}%` }} />
           </div>
@@ -196,7 +197,8 @@ export default function Dashboard() {
           <div className="text-xl mb-1">🥤</div>
           <div className="text-2xl font-bold text-amber-600">{today.waterCount}</div>
           <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">装个水 · 今日</div>
-          <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">本周 {weekWater} 次</div>
+          <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">&nbsp;</div>
+          <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">本周 {weekWater} 次</div>
           <div className="w-full h-1 bg-[var(--color-border)] rounded-full mt-2 overflow-hidden">
             <div className="h-full rounded-full" style={{ backgroundImage: 'linear-gradient(to right, #D97706, #FBBF24)', width: `${Math.min(today.waterCount / 8 * 100, 100)}%` }} />
           </div>
