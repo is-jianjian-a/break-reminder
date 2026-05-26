@@ -165,7 +165,7 @@ export default function History() {
       {dayRecords.length === 0 ? (
         <div className="text-center text-[var(--color-text-secondary)] py-12">该日暂无记录</div>
       ) : (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 items-start">
           {(['morning', 'afternoon', 'evening'] as const).map((period) => {
             const periodRecords = dayRecords.filter(r => getTimePeriod(r.timestamp) === period)
             const meta = PERIOD_META[period]
@@ -187,13 +187,13 @@ export default function History() {
                         key={record.id}
                         className="flex flex-col gap-0.5 rounded-lg px-2.5 py-2 group"
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <span className="text-base">{ACTION_ICONS[record.type]}</span>
-                          <span className="text-xs font-medium text-[var(--color-text)]">
+                          <span className="text-xs font-medium text-[var(--color-text)] whitespace-nowrap">
                             {ACTION_LABELS[record.type]}
                           </span>
-                          <span className="ml-auto text-xs text-[var(--color-text-secondary)]">{formatTime(record.timestamp)}</span>
                         </div>
+                        <span className="text-xs text-[var(--color-text-secondary)]">{formatTime(record.timestamp)}</span>
                         {record.type === 'walk' && record.durationSec ? (
                           editingId === record.id ? (
                             <div className="flex items-center gap-1 pl-7">
