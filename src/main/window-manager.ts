@@ -8,7 +8,7 @@ export class WindowManager {
     const { height: screenHeight } = screen.getPrimaryDisplay().workAreaSize
 
     const mainWindow = new BrowserWindow({
-      width: 520,
+      width: 560,
       height: screenHeight,
       show: false,
       resizable: false,

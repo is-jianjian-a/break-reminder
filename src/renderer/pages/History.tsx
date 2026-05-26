@@ -181,59 +181,63 @@ export default function History() {
                 {periodRecords.length === 0 ? (
                   <div className="text-xs text-[var(--color-text-secondary)] text-center py-4 opacity-50">暂无</div>
                 ) : (
-                  <div className="space-y-1.5">
-                    {periodRecords.map((record) => (
+                  <div className="space-y-0">
+                    {periodRecords.map((record, idx) => (
                       <div
                         key={record.id}
-                        className="flex flex-col gap-0.5 rounded-lg px-2.5 py-2 group"
+                        className="flex gap-2 group relative"
                       >
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-base">{ACTION_ICONS[record.type]}</span>
-                          <span className="text-xs font-medium text-[var(--color-text)] whitespace-nowrap">
-                            {ACTION_LABELS[record.type]}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 pl-7">
-                          <span className="text-xs text-[var(--color-text-secondary)]">{formatTime(record.timestamp)}</span>
-                          {record.type === 'walk' && record.durationSec && editingId !== record.id && (
-                            <span
-                              className="text-xs text-[var(--color-text-secondary)] cursor-pointer hover:text-indigo-600 transition-colors"
-                              onClick={() => handleEditDuration(record)}
-                              title="点击修改时长"
-                            >
-                              · {formatDuration(record.durationSec)}
-                            </span>
-                          )}
-                          {record.type !== 'walk' && record.durationSec && (
-                            <span className="text-xs text-[var(--color-text-secondary)]">· {formatDuration(record.durationSec)}</span>
-                          )}
-                        </div>
-                        {record.type === 'walk' && record.durationSec && editingId === record.id && (
-                          <div className="flex items-center gap-1 pl-7">
-                            <input
-                              type="number"
-                              min="0"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveDuration(record.id)
-                                if (e.key === 'Escape') handleCancelEdit()
-                              }}
-                              className="w-12 border border-indigo-300 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-[var(--color-surface-card)] text-[var(--color-text)]"
-                              autoFocus
-                            />
-                            <span className="text-xs text-[var(--color-text-secondary)]">分</span>
-                            <button onClick={() => handleSaveDuration(record.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
-                            <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
+                        <div className="flex flex-col items-center w-10 flex-shrink-0">
+                          <span className="text-[10px] text-[var(--color-text-secondary)] leading-tight mt-1.5">{formatTime(record.timestamp)}</span>
+                          <div className="flex-1 flex flex-col items-center mt-1">
+                            <div className="w-2 h-2 rounded-full bg-indigo-400 flex-shrink-0 z-10" />
+                            {idx < periodRecords.length - 1 && (
+                              <div className="w-px flex-1 bg-[var(--color-border)]" />
+                            )}
                           </div>
-                        )}
-                        <button
-                          onClick={() => handleDelete(record.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-xs self-end"
-                          title="删除"
-                        >
-                          ✕
-                        </button>
+                        </div>
+                        <div className="flex-1 pb-3 pt-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">{ACTION_ICONS[record.type]}</span>
+                            <span className="text-xs font-medium text-[var(--color-text)] whitespace-nowrap">
+                              {ACTION_LABELS[record.type]}
+                            </span>
+                            <button
+                              onClick={() => handleDelete(record.id)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-xs ml-auto"
+                              title="删除"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          {record.type === 'walk' && record.durationSec && editingId === record.id ? (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <input
+                                type="number"
+                                min="0"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveDuration(record.id)
+                                  if (e.key === 'Escape') handleCancelEdit()
+                                }}
+                                className="w-12 border border-indigo-300 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-[var(--color-surface-card)] text-[var(--color-text)]"
+                                autoFocus
+                              />
+                              <span className="text-xs text-[var(--color-text-secondary)]">分</span>
+                              <button onClick={() => handleSaveDuration(record.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
+                              <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
+                            </div>
+                          ) : record.durationSec ? (
+                            <span
+                              className={`text-xs text-[var(--color-text-secondary)] mt-0.5 ${record.type === 'walk' ? 'cursor-pointer hover:text-indigo-600 transition-colors' : ''}`}
+                              onClick={record.type === 'walk' ? () => handleEditDuration(record) : undefined}
+                              title={record.type === 'walk' ? '点击修改时长' : undefined}
+                            >
+                              {formatDuration(record.durationSec)}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     ))}
                   </div>
