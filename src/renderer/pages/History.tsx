@@ -192,6 +192,8 @@ export default function History() {
                           <span className="text-xs font-medium text-[var(--color-text)] whitespace-nowrap">
                             {ACTION_LABELS[record.type]}
                           </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 pl-7">
                           <span className="text-xs text-[var(--color-text-secondary)]">{formatTime(record.timestamp)}</span>
                           {record.type === 'walk' && record.durationSec && editingId !== record.id && (
                             <span
