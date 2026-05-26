@@ -176,6 +176,9 @@ export default function Dashboard() {
           <div className="text-2xl font-bold text-indigo-600">{today.standCount}</div>
           <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">站一站 · 今日</div>
           <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">本周 {weekStand} 次</div>
+          <div className="w-full h-1 bg-[var(--color-border)] rounded-full mt-2 overflow-hidden">
+            <div className="h-full rounded-full" style={{ backgroundImage: 'linear-gradient(to right, #4F46E5, #818CF8)', width: `${Math.min(today.standCount / 8 * 100, 100)}%` }} />
+          </div>
         </div>
 
         <div className="bg-[var(--color-surface-card)] rounded-xl p-3 shadow-sm border border-[var(--color-border)]">
@@ -184,6 +187,9 @@ export default function Dashboard() {
           <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">走一走 · 今日</div>
           <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">今日 {formatDuration(today.walkDurationSec)}</div>
           <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">本周 {weekWalk} 次</div>
+          <div className="w-full h-1 bg-[var(--color-border)] rounded-full mt-2 overflow-hidden">
+            <div className="h-full rounded-full" style={{ backgroundImage: 'linear-gradient(to right, #059669, #34D399)', width: `${Math.min(today.walkCount / 4 * 100, 100)}%` }} />
+          </div>
         </div>
 
         <div className="bg-[var(--color-surface-card)] rounded-xl p-3 shadow-sm border border-[var(--color-border)]">
@@ -191,6 +197,21 @@ export default function Dashboard() {
           <div className="text-2xl font-bold text-amber-600">{today.waterCount}</div>
           <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">装个水 · 今日</div>
           <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">本周 {weekWater} 次</div>
+          <div className="w-full h-1 bg-[var(--color-border)] rounded-full mt-2 overflow-hidden">
+            <div className="h-full rounded-full" style={{ backgroundImage: 'linear-gradient(to right, #D97706, #FBBF24)', width: `${Math.min(today.waterCount / 8 * 100, 100)}%` }} />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-[var(--color-surface-card)] rounded-xl p-4 shadow-sm border border-[var(--color-border)]">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-[var(--color-text)]">🏃 今日活动</span>
+          <span className="text-lg font-bold text-indigo-600">
+            {formatDuration(today.standCount * 60 + today.walkDurationSec)}
+          </span>
+        </div>
+        <div className="text-xs text-[var(--color-text-secondary)] mt-1">
+          站 {today.standCount} 次 + 走 {formatDuration(today.walkDurationSec)}
         </div>
       </div>
 

@@ -3,6 +3,19 @@ import { useApp } from '../contexts/AppContext'
 import { ActionType, ACTION_LABELS, ACTION_ICONS } from '../../shared/types'
 import CalendarPicker from '../components/CalendarPicker'
 
+function getTimePeriod(timestamp: number): 'morning' | 'afternoon' | 'evening' {
+  const hour = new Date(timestamp).getHours()
+  if (hour >= 6 && hour < 12) return 'morning'
+  if (hour >= 12 && hour < 18) return 'afternoon'
+  return 'evening'
+}
+
+const PERIOD_META: Record<string, { label: string; emoji: string }> = {
+  morning: { label: '上午', emoji: '🌅' },
+  afternoon: { label: '下午', emoji: '☀️' },
+  evening: { label: '晚上', emoji: '🌙' }
+}
+
 export default function History() {
   const { records, refreshRecords, refreshStats, refreshStreak, refreshWeekComparison } = useApp()
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -152,57 +165,73 @@ export default function History() {
       {dayRecords.length === 0 ? (
         <div className="text-center text-[var(--color-text-secondary)] py-12">该日暂无记录</div>
       ) : (
-        <div className="space-y-1.5">
-          {dayRecords.map((record) => (
-            <div
-              key={record.id}
-              className="flex items-center gap-3 bg-[var(--color-surface-card)] rounded-lg px-4 py-2.5 shadow-sm border border-[var(--color-border)] group"
-            >
-              <span className="text-lg">{ACTION_ICONS[record.type]}</span>
-              <span className="text-sm font-medium text-[var(--color-text)]">
-                {ACTION_LABELS[record.type]}
-              </span>
-              {record.type === 'walk' && record.durationSec ? (
-                editingId === record.id ? (
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      min="0"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSaveDuration(record.id)
-                        if (e.key === 'Escape') handleCancelEdit()
-                      }}
-                      className="w-12 border border-indigo-300 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-[var(--color-surface-card)] text-[var(--color-text)]"
-                      autoFocus
-                    />
-                    <span className="text-xs text-[var(--color-text-secondary)]">分</span>
-                    <button onClick={() => handleSaveDuration(record.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
-                    <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
-                  </div>
-                ) : (
-                  <span
-                    className="text-xs text-[var(--color-text-secondary)] cursor-pointer hover:text-indigo-600 transition-colors"
-                    onClick={() => handleEditDuration(record)}
-                    title="点击修改时长"
-                  >
-                    {formatDuration(record.durationSec)}
-                  </span>
-                )
-              ) : record.durationSec ? (
-                <span className="text-xs text-[var(--color-text-secondary)]">{formatDuration(record.durationSec)}</span>
-              ) : null}
-              <span className="ml-auto text-xs text-[var(--color-text-secondary)]">{formatTime(record.timestamp)}</span>
-              <button
-                onClick={() => handleDelete(record.id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-sm ml-2"
-                title="删除"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+        <div className="space-y-4">
+          {(['morning', 'afternoon', 'evening'] as const).map((period) => {
+            const periodRecords = dayRecords.filter(r => getTimePeriod(r.timestamp) === period)
+            if (periodRecords.length === 0) return null
+            const meta = PERIOD_META[period]
+            return (
+              <div key={period}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">{meta.emoji}</span>
+                  <span className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">{meta.label}</span>
+                  <span className="text-xs text-[var(--color-text-secondary)]">{periodRecords.length} 条</span>
+                </div>
+                <div className="space-y-1.5">
+                  {periodRecords.map((record) => (
+                    <div
+                      key={record.id}
+                      className="flex items-center gap-3 bg-[var(--color-surface-card)] rounded-lg px-4 py-2.5 shadow-sm border border-[var(--color-border)] group"
+                    >
+                      <span className="text-lg">{ACTION_ICONS[record.type]}</span>
+                      <span className="text-sm font-medium text-[var(--color-text)]">
+                        {ACTION_LABELS[record.type]}
+                      </span>
+                      {record.type === 'walk' && record.durationSec ? (
+                        editingId === record.id ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveDuration(record.id)
+                                if (e.key === 'Escape') handleCancelEdit()
+                              }}
+                              className="w-12 border border-indigo-300 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-[var(--color-surface-card)] text-[var(--color-text)]"
+                              autoFocus
+                            />
+                            <span className="text-xs text-[var(--color-text-secondary)]">分</span>
+                            <button onClick={() => handleSaveDuration(record.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
+                            <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
+                          </div>
+                        ) : (
+                          <span
+                            className="text-xs text-[var(--color-text-secondary)] cursor-pointer hover:text-indigo-600 transition-colors"
+                            onClick={() => handleEditDuration(record)}
+                            title="点击修改时长"
+                          >
+                            {formatDuration(record.durationSec)}
+                          </span>
+                        )
+                      ) : record.durationSec ? (
+                        <span className="text-xs text-[var(--color-text-secondary)]">{formatDuration(record.durationSec)}</span>
+                      ) : null}
+                      <span className="ml-auto text-xs text-[var(--color-text-secondary)]">{formatTime(record.timestamp)}</span>
+                      <button
+                        onClick={() => handleDelete(record.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-sm ml-2"
+                        title="删除"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 

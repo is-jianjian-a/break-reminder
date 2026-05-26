@@ -86,7 +86,7 @@ export default function CalendarPicker({ selectedDate, onSelectDate, recordDates
   const weekdays = ['日', '一', '二', '三', '四', '五', '六']
 
   return (
-    <div className="bg-[var(--color-surface-card)] rounded-xl p-3 shadow-sm border border-[var(--color-border)]" style={{ width: 280 }}>
+    <div className="bg-[var(--color-surface-card)] rounded-xl p-3 shadow-sm border border-[var(--color-border)]" style={{ width: '100%' }}>
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={handlePrevMonth}
@@ -113,7 +113,7 @@ export default function CalendarPicker({ selectedDate, onSelectDate, recordDates
 
       <div className="grid grid-cols-7 mb-1">
         {weekdays.map((wd) => (
-          <div key={wd} className="text-center text-xs text-[var(--color-text-secondary)] font-medium py-1">
+          <div key={wd} className="text-center text-xs text-[var(--color-text-secondary)] font-medium py-1.5">
             {wd}
           </div>
         ))}
@@ -131,16 +131,16 @@ export default function CalendarPicker({ selectedDate, onSelectDate, recordDates
               key={idx}
               onClick={() => handleClickDay(cell.year, cell.month, cell.day)}
               className={`
-                relative flex flex-col items-center justify-center py-1 rounded-md transition-colors
+                relative flex flex-col items-center justify-center py-1.5 rounded-lg transition-colors
                 ${!cell.isCurrentMonth ? 'opacity-30' : ''}
                 ${isSelected ? 'bg-indigo-600 text-white' : 'text-[var(--color-text)] hover:bg-[var(--color-bg-hover)]'}
-                ${isToday && !isSelected ? 'ring-1 ring-indigo-400' : ''}
+                ${isToday && !isSelected ? 'border-b-2 border-indigo-400' : ''}
               `}
             >
-              <span className="text-xs leading-tight whitespace-nowrap">{cell.day}</span>
+              <span className="text-sm leading-tight whitespace-nowrap">{cell.day}</span>
               {hasRecord && (
                 <span
-                  className={`w-1 h-1 rounded-full mt-0.5 ${isSelected ? 'bg-white' : 'bg-indigo-500'}`}
+                  className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isSelected ? 'bg-white' : 'bg-indigo-500'}`}
                 />
               )}
             </button>
