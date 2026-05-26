@@ -1,14 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useApp } from '../contexts/AppContext'
-import { ActionType, ACTION_LABELS, ACTION_ICONS } from '../../shared/types'
+import { ActionType, ACTION_LABELS, ACTION_ICONS, WorkPeriod, ActionRecord } from '../../shared/types'
 import CalendarPicker from '../components/CalendarPicker'
-
-function getTimePeriod(timestamp: number): 'morning' | 'afternoon' | 'evening' {
-  const hour = new Date(timestamp).getHours()
-  if (hour >= 6 && hour < 12) return 'morning'
-  if (hour >= 12 && hour < 18) return 'afternoon'
-  return 'evening'
-}
 
 const PERIOD_META: Record<string, { label: string; emoji: string }> = {
   morning: { label: '上午', emoji: '🌅' },
@@ -16,8 +9,49 @@ const PERIOD_META: Record<string, { label: string; emoji: string }> = {
   evening: { label: '晚上', emoji: '🌙' }
 }
 
+const PERIOD_KEYS = ['morning', 'afternoon', 'evening']
+
+function timeToMinutes(timeStr: string): number {
+  const [h, m] = timeStr.split(':').map(Number)
+  return h * 60 + m
+}
+
+function getPeriodTimeMs(period: WorkPeriod, dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const sMin = timeToMinutes(period.start)
+  const eMin = timeToMinutes(period.end)
+  return {
+    startMs: new Date(year, month - 1, day, Math.floor(sMin / 60), sMin % 60).getTime(),
+    endMs: new Date(year, month - 1, day, Math.floor(eMin / 60), eMin % 60).getTime()
+  }
+}
+
+function calcPosition(timestamp: number, period: WorkPeriod, dateStr: string): number {
+  const { startMs, endMs } = getPeriodTimeMs(period, dateStr)
+  const dur = endMs - startMs
+  if (dur <= 0) return 0
+  return Math.max(0, Math.min(100, ((timestamp - startMs) / dur) * 100))
+}
+
+function getHourTicks(period: WorkPeriod): { position: number; label: string }[] {
+  const sMin = timeToMinutes(period.start)
+  const eMin = timeToMinutes(period.end)
+  const dur = eMin - sMin
+  if (dur <= 0) return []
+  const ticks: { position: number; label: string }[] = []
+  const startH = Math.ceil(sMin / 60)
+  const endH = Math.floor(eMin / 60)
+  for (let h = startH; h <= endH; h++) {
+    const pos = ((h * 60 - sMin) / dur) * 100
+    if (pos > 3 && pos < 97) {
+      ticks.push({ position: pos, label: `${h}` })
+    }
+  }
+  return ticks
+}
+
 export default function History() {
-  const { records, refreshRecords, refreshStats, refreshStreak, refreshWeekComparison } = useApp()
+  const { records, config, refreshRecords, refreshStats, refreshStreak, refreshWeekComparison } = useApp()
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
@@ -86,9 +120,9 @@ export default function History() {
   }
 
   const handleEditDuration = (record: ActionRecord) => {
-    if (record.type !== 'walk' || !record.durationSec) return
+    if (record.type !== 'walk') return
     setEditingId(record.id)
-    setEditValue(String(Math.round(record.durationSec / 60)))
+    setEditValue(record.durationSec ? String(Math.round(record.durationSec / 60)) : '5')
   }
 
   const handleSaveDuration = async (id: string) => {
@@ -140,6 +174,41 @@ export default function History() {
     setShowAddForm(true)
   }
 
+  const periodRecordsMap = useMemo(() => {
+    const map = new Map<string, ActionRecord[]>()
+    for (const period of config.workPeriods) {
+      const { startMs, endMs } = getPeriodTimeMs(period, selectedDateStr)
+      const pr = dayRecords.filter(r => r.timestamp >= startMs && r.timestamp < endMs)
+      map.set(period.id, pr)
+    }
+    const assigned = new Set<string>()
+    for (const pr of map.values()) {
+      for (const r of pr) assigned.add(r.id)
+    }
+    const unassigned = dayRecords.filter(r => !assigned.has(r.id))
+    if (unassigned.length > 0 && config.workPeriods.length > 0) {
+      for (const record of unassigned) {
+        const rMin = new Date(record.timestamp).getHours() * 60 + new Date(record.timestamp).getMinutes()
+        let nearestIdx = 0
+        let nearestDist = Infinity
+        for (let i = 0; i < config.workPeriods.length; i++) {
+          const sMin = timeToMinutes(config.workPeriods[i].start)
+          const eMin = timeToMinutes(config.workPeriods[i].end)
+          const dist = Math.min(Math.abs(rMin - sMin), Math.abs(rMin - eMin))
+          if (dist < nearestDist) {
+            nearestDist = dist
+            nearestIdx = i
+          }
+        }
+        const periodId = config.workPeriods[nearestIdx].id
+        const existing = map.get(periodId) || []
+        existing.push(record)
+        map.set(periodId, existing)
+      }
+    }
+    return map
+  }, [config.workPeriods, dayRecords, selectedDateStr])
+
   return (
     <div className="p-5 space-y-4">
       <div className="flex items-center justify-between">
@@ -162,91 +231,116 @@ export default function History() {
         {dateLabel}
       </div>
 
-      {dayRecords.length === 0 ? (
-        <div className="text-center text-[var(--color-text-secondary)] py-12">该日暂无记录</div>
-      ) : (
-        <div className="grid grid-cols-3 gap-3 items-start">
-          {(['morning', 'afternoon', 'evening'] as const).map((period) => {
-            const periodRecords = dayRecords.filter(r => getTimePeriod(r.timestamp) === period)
-            const meta = PERIOD_META[period]
-            return (
-              <div key={period} className="bg-[var(--color-surface-card)] rounded-xl p-3 border border-[var(--color-border)]">
-                <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-[var(--color-border)]">
-                  <span className="text-sm">{meta.emoji}</span>
-                  <span className="text-xs font-semibold text-[var(--color-text-secondary)]">{meta.label}</span>
-                  {periodRecords.length > 0 && (
-                    <span className="text-xs text-[var(--color-text-secondary)]">{periodRecords.length}条</span>
-                  )}
-                </div>
-                {periodRecords.length === 0 ? (
-                  <div className="text-xs text-[var(--color-text-secondary)] text-center py-4 opacity-50">暂无</div>
-                ) : (
-                  <div className="space-y-0">
-                    {periodRecords.map((record, idx) => (
-                      <div
-                        key={record.id}
-                        className="flex gap-2 group relative"
-                      >
-                        <div className="flex flex-col items-center w-10 flex-shrink-0">
-                          <span className="text-[10px] text-[var(--color-text-secondary)] leading-tight mt-1.5">{formatTime(record.timestamp)}</span>
-                          <div className="flex-1 flex flex-col items-center mt-1">
-                            <div className="w-2 h-2 rounded-full bg-indigo-400 flex-shrink-0 z-10" />
-                            {idx < periodRecords.length - 1 && (
-                              <div className="w-px flex-1 bg-[var(--color-border)]" />
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex-1 pb-3 pt-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-sm">{ACTION_ICONS[record.type]}</span>
-                            <span className="text-xs font-medium text-[var(--color-text)] whitespace-nowrap">
-                              {ACTION_LABELS[record.type]}
-                            </span>
-                            <button
-                              onClick={() => handleDelete(record.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 text-xs ml-auto"
-                              title="删除"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                          {record.type === 'walk' && record.durationSec && editingId === record.id ? (
-                            <div className="flex items-center gap-1 mt-0.5">
-                              <input
-                                type="number"
-                                min="0"
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleSaveDuration(record.id)
-                                  if (e.key === 'Escape') handleCancelEdit()
-                                }}
-                                className="w-12 border border-indigo-300 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-[var(--color-surface-card)] text-[var(--color-text)]"
-                                autoFocus
-                              />
-                              <span className="text-xs text-[var(--color-text-secondary)]">分</span>
-                              <button onClick={() => handleSaveDuration(record.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
-                              <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
-                            </div>
-                          ) : record.durationSec ? (
-                            <span
-                              className={`text-xs text-[var(--color-text-secondary)] mt-0.5 ${record.type === 'walk' ? 'cursor-pointer hover:text-indigo-600 transition-colors' : ''}`}
-                              onClick={record.type === 'walk' ? () => handleEditDuration(record) : undefined}
-                              title={record.type === 'walk' ? '点击修改时长' : undefined}
-                            >
-                              {formatDuration(record.durationSec)}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+      <div className="space-y-3">
+        {config.workPeriods.map((period, index) => {
+          const periodKey = PERIOD_KEYS[index] || `period-${index}`
+          const meta = PERIOD_META[periodKey] || { label: `时段${index + 1}`, emoji: '⏰' }
+          const periodRecords = periodRecordsMap.get(period.id) || []
+          const ticks = getHourTicks(period)
+          const hasEditing = periodRecords.some(r => r.id === editingId)
+
+          return (
+            <div key={period.id} className="bg-[var(--color-surface-card)] rounded-xl p-4 border border-[var(--color-border)]">
+              <div className="flex items-center gap-1.5 mb-3">
+                <span className="text-sm">{meta.emoji}</span>
+                <span className="text-xs font-semibold text-[var(--color-text-secondary)]">{meta.label}</span>
+                {periodRecords.length > 0 && (
+                  <span className="text-[10px] text-[var(--color-text-secondary)] opacity-60">{periodRecords.length}条</span>
                 )}
               </div>
-            )
-          })}
-        </div>
-      )}
+
+              <div className="flex items-center">
+                <span className="text-[10px] text-[var(--color-text-secondary)] w-10 text-right flex-shrink-0 mr-2 font-mono">
+                  {period.start}
+                </span>
+
+                <div
+                  className="relative flex-1 overflow-visible"
+                  style={{ minHeight: hasEditing ? '56px' : '32px' }}
+                >
+                  <div
+                    className="absolute left-0 right-0 h-px bg-[var(--color-border)]"
+                    style={{ top: '14px' }}
+                  />
+
+                  {ticks.map((tick) => (
+                    <div
+                      key={tick.label}
+                      className="absolute"
+                      style={{ left: `${tick.position}%`, top: '14px', transform: 'translateX(-50%)' }}
+                    >
+                      <div className="w-px h-2 bg-[var(--color-border)] mx-auto" />
+                      <div className="text-[8px] text-[var(--color-text-secondary)] opacity-40 text-center whitespace-nowrap">
+                        {tick.label}
+                      </div>
+                    </div>
+                  ))}
+
+                  {periodRecords.map((record) => {
+                    const pos = calcPosition(record.timestamp, period, selectedDateStr)
+                    const isEditing = editingId === record.id
+                    return (
+                      <div
+                        key={record.id}
+                        className="absolute z-10 hover:z-30 group"
+                        style={{ left: `${pos}%`, top: '14px', transform: 'translate(-50%, -50%)' }}
+                      >
+                        <span
+                          className={`text-base block ${record.type === 'walk' ? 'cursor-pointer hover:scale-125 transition-transform' : ''}`}
+                          onClick={record.type === 'walk' ? () => handleEditDuration(record) : undefined}
+                        >
+                          {ACTION_ICONS[record.type]}
+                        </span>
+
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDelete(record.id) }}
+                          className="hidden group-hover:flex absolute -top-1.5 -right-2 w-3.5 h-3.5 items-center justify-center bg-red-500 text-white rounded-full text-[8px] leading-none z-20 hover:bg-red-600"
+                        >
+                          ✕
+                        </button>
+
+                        <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 pointer-events-none">
+                          <div className="bg-[var(--color-surface-card)] border border-[var(--color-border)] rounded-lg px-2.5 py-1.5 shadow-lg whitespace-nowrap">
+                            <div className="text-xs text-[var(--color-text)] font-medium">{formatTime(record.timestamp)}</div>
+                            <div className="text-[10px] text-[var(--color-text-secondary)]">{ACTION_LABELS[record.type]}</div>
+                            {record.durationSec ? (
+                              <div className="text-[10px] text-[var(--color-text-secondary)]">{formatDuration(record.durationSec)}</div>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {isEditing && (
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex items-center gap-1 z-30 bg-[var(--color-surface-card)] border border-[var(--color-border)] rounded-lg px-2 py-1 shadow-lg">
+                            <input
+                              type="number"
+                              min="0"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveDuration(record.id)
+                                if (e.key === 'Escape') handleCancelEdit()
+                              }}
+                              className="w-12 border border-indigo-300 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-[var(--color-surface-card)] text-[var(--color-text)]"
+                              autoFocus
+                            />
+                            <span className="text-[10px] text-[var(--color-text-secondary)]">分</span>
+                            <button onClick={() => handleSaveDuration(record.id)} className="text-xs text-indigo-600 hover:text-indigo-800">✓</button>
+                            <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <span className="text-[10px] text-[var(--color-text-secondary)] w-10 flex-shrink-0 ml-2 font-mono">
+                  {period.end}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
       {showAddForm && (
         <div className="bg-[var(--color-surface-card)] rounded-xl p-4 shadow-sm border border-indigo-200 space-y-3 animate-fade-in">
