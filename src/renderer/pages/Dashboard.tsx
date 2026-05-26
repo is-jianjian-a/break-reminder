@@ -33,7 +33,7 @@ function WalkTimer({ startTime }: { startTime: number }) {
 
   return (
     <div className="flex items-center gap-4">
-      <svg className="w-24 h-24 rotate-180">
+      <svg className="w-24 h-24">
         <circle
           cx="48"
           cy="48"
@@ -52,6 +52,7 @@ function WalkTimer({ startTime }: { startTime: number }) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
+          transform="rotate(-90 48 48)"
           className="transition-all duration-1000 ease-linear"
         />
         <text
