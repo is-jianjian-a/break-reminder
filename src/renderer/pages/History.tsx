@@ -12,12 +12,6 @@ const PERIOD_META: Record<string, { label: string; emoji: string }> = {
 
 const PERIOD_KEYS = ['morning', 'afternoon', 'evening']
 
-const DOT_COLORS: Record<ActionType, string> = {
-  stand: 'bg-indigo-500',
-  walk: 'bg-emerald-500',
-  water: 'bg-amber-500'
-}
-
 function timeToMinutes(timeStr: string): number {
   const [h, m] = timeStr.split(':').map(Number)
   return h * 60 + m
@@ -289,14 +283,11 @@ export default function History() {
 
                   const recs = item.records!
                   const firstRec = recs[0]
-                  const hasWalk = recs.some(r => r.type === 'walk')
                   const walkRec = recs.find(r => r.type === 'walk')
                   const isEditing = walkRec && editingId === walkRec.id
-                  const dotColor = hasWalk ? DOT_COLORS.walk : DOT_COLORS[recs[0].type]
 
                   return (
                     <div key={`r-${idx}`} className="relative flex items-center py-1.5 group">
-                      <div className={`absolute left-[1.5px] w-3 h-3 rounded-full ${dotColor} ring-2 ring-[var(--color-surface-card)]`} />
                       <div className="flex items-center gap-1 min-w-0 flex-1">
                         <span className="text-[11px] text-[var(--color-text-secondary)] font-mono shrink-0">
                           {formatTime(firstRec.timestamp)}
