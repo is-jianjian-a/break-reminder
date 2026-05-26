@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, screen, shell, globalShortcut } from 'electron'
 import { execSync } from 'node:child_process'
+import { execFile } from 'node:child_process'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { TimerEngine } from './timer-engine'
 import { NotificationManager } from './notification-manager'
@@ -203,11 +204,11 @@ app.whenReady().then(() => {
   })
 
   ipcMain.on('display-sleep', () => {
-    try {
-      execSync('pmset displaysleepnow')
-    } catch (e) {
-      console.error('Failed to execute displaysleepnow:', e)
-    }
+    execFile('/usr/bin/pmset', ['displaysleepnow'], (error) => {
+      if (error) {
+        console.error('Failed to execute displaysleepnow:', error)
+      }
+    })
   })
 
   ipcMain.on('walk-complete', (_event, durationSec: number) => {
