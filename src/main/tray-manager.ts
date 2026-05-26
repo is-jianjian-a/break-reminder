@@ -93,7 +93,7 @@ export class TrayManager {
 
   private createTray(): void {
     const icon = createTrayIcon()
-    const templateIcon = icon.resize({ width: 22, height: 22 })
+    const templateIcon = icon.resize({ width: 18, height: 18 })
     templateIcon.setTemplateImage(true)
     this.tray = new Tray(templateIcon)
     this.tray.setToolTip('Break Reminder - 点击打开')
