@@ -1,6 +1,5 @@
 import { app, BrowserWindow, ipcMain, screen, shell, globalShortcut } from 'electron'
-import { execSync } from 'node:child_process'
-import { execFile } from 'node:child_process'
+import { execSync, spawn } from 'node:child_process'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { TimerEngine } from './timer-engine'
 import { NotificationManager } from './notification-manager'
@@ -204,11 +203,21 @@ app.whenReady().then(() => {
   })
 
   ipcMain.on('display-sleep', () => {
-    execFile('/usr/bin/pmset', ['displaysleepnow'], (error) => {
-      if (error) {
-        console.error('Failed to execute displaysleepnow:', error)
+    try {
+      const child = spawn('pmset', ['displaysleepnow'], {
+        detached: true,
+        stdio: 'ignore',
+        env: { ...process.env }
+      })
+      child.unref()
+    } catch (e) {
+      console.error('display-sleep spawn failed:', e)
+      try {
+        execSync('pmset displaysleepnow')
+      } catch (e2) {
+        console.error('display-sleep execSync failed:', e2)
       }
-    })
+    }
   })
 
   ipcMain.on('walk-complete', (_event, durationSec: number) => {
