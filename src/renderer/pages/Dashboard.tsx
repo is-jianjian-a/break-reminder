@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../contexts/AppContext'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { ActionIcon } from '../utils/ActionIcon'
+import { ACTION_LABELS } from '../../shared/types'
 
 function useIsDark() {
   const [isDark, setIsDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -139,7 +141,7 @@ export default function Dashboard() {
       {walkStatus.isWalking ? (
         <div className="bg-emerald-50 rounded-xl p-4 shadow-sm border border-emerald-200">
           <div className="flex items-center gap-2">
-            <span className="text-lg">🚶</span>
+            <ActionIcon type="walk" size={20} />
             <span className="text-sm font-medium text-emerald-700">正在走路</span>
           </div>
           <WalkTimer startTime={walkStatus.startTime!} />
@@ -173,7 +175,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-[var(--color-surface-card)] rounded-xl p-3 shadow-sm border border-[var(--color-border)]">
-          <div className="text-xl mb-1">🧍</div>
+          <div className="mb-1"><ActionIcon type="stand" size={20} /></div>
           <div className="text-2xl font-bold text-indigo-600">{today.standCount}</div>
           <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">站一站 · 今日</div>
           <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">&nbsp;</div>
@@ -184,7 +186,7 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-[var(--color-surface-card)] rounded-xl p-3 shadow-sm border border-[var(--color-border)]">
-          <div className="text-xl mb-1">🚶</div>
+          <div className="mb-1"><ActionIcon type="walk" size={20} /></div>
           <div className="text-2xl font-bold text-emerald-600">{today.walkCount}</div>
           <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">走一走 · 今日</div>
           <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">今日 {formatDuration(today.walkDurationSec)}</div>
@@ -195,7 +197,7 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-[var(--color-surface-card)] rounded-xl p-3 shadow-sm border border-[var(--color-border)]">
-          <div className="text-xl mb-1">🥤</div>
+          <div className="mb-1"><ActionIcon type="water" size={20} /></div>
           <div className="text-2xl font-bold text-amber-600">{today.waterCount}</div>
           <div className="text-xs text-[var(--color-text-secondary)] whitespace-nowrap">装个水 · 今日</div>
           <div className="text-xs text-[var(--color-text-secondary)] mt-1 whitespace-nowrap">&nbsp;</div>
@@ -235,7 +237,7 @@ export default function Dashboard() {
           onClick={() => window.electron?.ipcRenderer.invoke('add-water')}
           className="flex-1 py-2.5 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition-colors shadow-md"
         >
-          🥤 喝了水
+          <ActionIcon type="water" size={16} className="inline" /> 喝了水
         </button>
       </div>
 
@@ -258,13 +260,14 @@ export default function Dashboard() {
       <div className="bg-[var(--color-surface-card)] rounded-xl p-4 shadow-sm border border-[var(--color-border)]">
         <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">📊 本周 vs 上周</h3>
         {(['stand', 'walk', 'water'] as const).map((type) => {
-          const labels = { stand: '🧍 站一站', walk: '🚶 走一走', water: '🥤 装个水' }
           const thisCount = weekComparison?.thisWeek[type] || 0
           const lastCount = weekComparison?.lastWeek[type] || 0
           const diff = thisCount - lastCount
           return (
             <div key={type} className="flex items-center justify-between py-1.5">
-              <span className="text-sm text-[var(--color-text)] whitespace-nowrap">{labels[type]}</span>
+              <span className="text-sm text-[var(--color-text)] whitespace-nowrap flex items-center gap-1">
+                <ActionIcon type={type} size={14} /> {ACTION_LABELS[type]}
+              </span>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-[var(--color-text-secondary)] whitespace-nowrap">{thisCount} 次</span>
                 {diff !== 0 && (

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useApp } from '../contexts/AppContext'
-import { ActionType, ACTION_LABELS, ACTION_ICONS, WorkPeriod, ActionRecord } from '../../shared/types'
+import { ActionType, ACTION_LABELS, WorkPeriod, ActionRecord } from '../../shared/types'
+import { ActionIcon } from '../utils/ActionIcon'
 import CalendarPicker from '../components/CalendarPicker'
 
 const PERIOD_META: Record<string, { label: string; emoji: string }> = {
@@ -10,6 +11,12 @@ const PERIOD_META: Record<string, { label: string; emoji: string }> = {
 }
 
 const PERIOD_KEYS = ['morning', 'afternoon', 'evening']
+
+const DOT_COLORS: Record<ActionType, string> = {
+  stand: 'bg-indigo-500',
+  walk: 'bg-emerald-500',
+  water: 'bg-amber-500'
+}
 
 function timeToMinutes(timeStr: string): number {
   const [h, m] = timeStr.split(':').map(Number)
@@ -26,28 +33,38 @@ function getPeriodTimeMs(period: WorkPeriod, dateStr: string) {
   }
 }
 
-function calcPosition(timestamp: number, period: WorkPeriod, dateStr: string): number {
-  const { startMs, endMs } = getPeriodTimeMs(period, dateStr)
-  const dur = endMs - startMs
-  if (dur <= 0) return 0
-  return Math.max(0, Math.min(100, ((timestamp - startMs) / dur) * 100))
-}
-
-function getHourTicks(period: WorkPeriod): { position: number; label: string }[] {
+function getDisplayRange(period: WorkPeriod, index: number) {
   const sMin = timeToMinutes(period.start)
   const eMin = timeToMinutes(period.end)
-  const dur = eMin - sMin
-  if (dur <= 0) return []
-  const ticks: { position: number; label: string }[] = []
-  const startH = Math.ceil(sMin / 60)
-  const endH = Math.floor(eMin / 60)
+  return {
+    startMin: index === 0 ? 8 * 60 : sMin,
+    endMin: index === 2 ? 23 * 60 : eMin
+  }
+}
+
+interface TimelineItem {
+  type: 'hour' | 'record'
+  minutes: number
+  hour?: number
+  record?: ActionRecord
+}
+
+function buildTimelineItems(displayStart: number, displayEnd: number, records: ActionRecord[]): TimelineItem[] {
+  const items: TimelineItem[] = []
+  const startH = Math.floor(displayStart / 60)
+  const endH = Math.ceil(displayEnd / 60)
   for (let h = startH; h <= endH; h++) {
-    const pos = ((h * 60 - sMin) / dur) * 100
-    if (pos > 3 && pos < 97) {
-      ticks.push({ position: pos, label: `${h}` })
+    const hMin = h * 60
+    if (hMin >= displayStart && hMin <= displayEnd) {
+      items.push({ type: 'hour', minutes: hMin, hour: h })
     }
   }
-  return ticks
+  for (const record of records) {
+    const d = new Date(record.timestamp)
+    items.push({ type: 'record', minutes: d.getHours() * 60 + d.getMinutes(), record })
+  }
+  items.sort((a, b) => a.minutes - b.minutes || (a.type === 'hour' ? -1 : 1))
+  return items
 }
 
 export default function History() {
@@ -231,17 +248,17 @@ export default function History() {
         {dateLabel}
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-3 items-start">
         {config.workPeriods.map((period, index) => {
           const periodKey = PERIOD_KEYS[index] || `period-${index}`
           const meta = PERIOD_META[periodKey] || { label: `时段${index + 1}`, emoji: '⏰' }
           const periodRecords = periodRecordsMap.get(period.id) || []
-          const ticks = getHourTicks(period)
-          const hasEditing = periodRecords.some(r => r.id === editingId)
+          const { startMin, endMin } = getDisplayRange(period, index)
+          const items = buildTimelineItems(startMin, endMin, periodRecords)
 
           return (
-            <div key={period.id} className="bg-[var(--color-surface-card)] rounded-xl p-4 border border-[var(--color-border)]">
-              <div className="flex items-center gap-1.5 mb-3">
+            <div key={period.id} className="bg-[var(--color-surface-card)] rounded-xl p-3 border border-[var(--color-border)]">
+              <div className="flex items-center gap-1.5 mb-2">
                 <span className="text-sm">{meta.emoji}</span>
                 <span className="text-xs font-semibold text-[var(--color-text-secondary)]">{meta.label}</span>
                 {periodRecords.length > 0 && (
@@ -249,68 +266,43 @@ export default function History() {
                 )}
               </div>
 
-              <div className="flex items-center">
-                <span className="text-[10px] text-[var(--color-text-secondary)] w-10 text-right flex-shrink-0 mr-2 font-mono">
-                  {period.start}
-                </span>
+              <div className="relative pl-7">
+                <div className="absolute left-[11px] top-0 bottom-0 w-px bg-[var(--color-border)]" />
 
-                <div
-                  className="relative flex-1 overflow-visible"
-                  style={{ minHeight: hasEditing ? '56px' : '32px' }}
-                >
-                  <div
-                    className="absolute left-0 right-0 h-px bg-[var(--color-border)]"
-                    style={{ top: '14px' }}
-                  />
-
-                  {ticks.map((tick) => (
-                    <div
-                      key={tick.label}
-                      className="absolute"
-                      style={{ left: `${tick.position}%`, top: '14px', transform: 'translateX(-50%)' }}
-                    >
-                      <div className="w-px h-2 bg-[var(--color-border)] mx-auto" />
-                      <div className="text-[8px] text-[var(--color-text-secondary)] opacity-40 text-center whitespace-nowrap">
-                        {tick.label}
-                      </div>
-                    </div>
-                  ))}
-
-                  {periodRecords.map((record) => {
-                    const pos = calcPosition(record.timestamp, period, selectedDateStr)
-                    const isEditing = editingId === record.id
+                {items.map((item) => {
+                  if (item.type === 'hour') {
                     return (
-                      <div
-                        key={record.id}
-                        className="absolute z-10 hover:z-30 group"
-                        style={{ left: `${pos}%`, top: '14px', transform: 'translate(-50%, -50%)' }}
-                      >
-                        <span
-                          className={`text-base block ${record.type === 'walk' ? 'cursor-pointer hover:scale-125 transition-transform' : ''}`}
-                          onClick={record.type === 'walk' ? () => handleEditDuration(record) : undefined}
-                        >
-                          {ACTION_ICONS[record.type]}
+                      <div key={`h-${item.hour}`} className="relative flex items-center h-7">
+                        <div className="absolute left-[8px] w-3 h-px bg-[var(--color-text-secondary)] opacity-30" />
+                        <span className="text-[10px] text-[var(--color-text-secondary)] opacity-40 font-mono select-none">
+                          {String(item.hour).padStart(2, '0')}:00
                         </span>
+                      </div>
+                    )
+                  }
 
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(record.id) }}
-                          className="hidden group-hover:flex absolute -top-1.5 -right-2 w-3.5 h-3.5 items-center justify-center bg-red-500 text-white rounded-full text-[8px] leading-none z-20 hover:bg-red-600"
-                        >
-                          ✕
-                        </button>
+                  const record = item.record!
+                  const isEditing = editingId === record.id
 
-                        <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 pointer-events-none">
-                          <div className="bg-[var(--color-surface-card)] border border-[var(--color-border)] rounded-lg px-2.5 py-1.5 shadow-lg whitespace-nowrap">
-                            <div className="text-xs text-[var(--color-text)] font-medium">{formatTime(record.timestamp)}</div>
-                            <div className="text-[10px] text-[var(--color-text-secondary)]">{ACTION_LABELS[record.type]}</div>
-                            {record.durationSec ? (
-                              <div className="text-[10px] text-[var(--color-text-secondary)]">{formatDuration(record.durationSec)}</div>
-                            ) : null}
-                          </div>
-                        </div>
-
+                  return (
+                    <div key={record.id} className="relative flex items-center py-1.5 group">
+                      <div className={`absolute left-[7px] w-2.5 h-2.5 rounded-full ${DOT_COLORS[record.type]} ring-2 ring-[var(--color-surface-card)]`} />
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span className="text-[11px] text-[var(--color-text-secondary)] font-mono shrink-0">
+                          {formatTime(record.timestamp)}
+                        </span>
+                        <ActionIcon type={record.type} size={13} />
+                        <span className="text-xs text-[var(--color-text)] truncate">{ACTION_LABELS[record.type]}</span>
+                        {record.type === 'walk' && record.durationSec && !isEditing && (
+                          <span
+                            className="text-[10px] text-[var(--color-text-secondary)] cursor-pointer hover:text-indigo-500 transition-colors shrink-0"
+                            onClick={() => handleEditDuration(record)}
+                          >
+                            {formatDuration(record.durationSec)}
+                          </span>
+                        )}
                         {isEditing && (
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex items-center gap-1 z-30 bg-[var(--color-surface-card)] border border-[var(--color-border)] rounded-lg px-2 py-1 shadow-lg">
+                          <div className="flex items-center gap-1 shrink-0">
                             <input
                               type="number"
                               min="0"
@@ -328,14 +320,16 @@ export default function History() {
                             <button onClick={handleCancelEdit} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">✕</button>
                           </div>
                         )}
+                        <button
+                          onClick={() => handleDelete(record.id)}
+                          className="opacity-0 group-hover:opacity-100 ml-auto shrink-0 w-4 h-4 flex items-center justify-center text-red-400 hover:text-red-600 transition-all text-[10px]"
+                        >
+                          ✕
+                        </button>
                       </div>
-                    )
-                  })}
-                </div>
-
-                <span className="text-[10px] text-[var(--color-text-secondary)] w-10 flex-shrink-0 ml-2 font-mono">
-                  {period.end}
-                </span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )
@@ -353,13 +347,14 @@ export default function History() {
                 <button
                   key={type}
                   onClick={() => setAddType(type)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     addType === type
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'bg-[var(--color-bg-hover)] text-[var(--color-text-secondary)] hover:bg-indigo-50'
                   }`}
                 >
-                  {ACTION_ICONS[type]} {ACTION_LABELS[type]}
+                  <ActionIcon type={type} size={14} />
+                  {ACTION_LABELS[type]}
                 </button>
               ))}
             </div>

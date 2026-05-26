@@ -1,29 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { ActionIcon } from '../utils/ActionIcon'
+import { ActionType } from '../../shared/types'
 
 interface ToastItem {
   id: number
   message: string
-  icon: string
+  icon: ActionType | null
 }
 
 let toastId = 0
 
-const iconMap: Record<string, string> = {
-  '站一站': '🧍',
-  '走一走': '🚶',
-  '装个水': '🥤',
-  '喝水': '🥤',
-  '跳过': '⏭️',
-  '超时': '⏰',
+const iconMap: Record<string, ActionType> = {
+  '站一站': 'stand',
+  '走一走': 'walk',
+  '装个水': 'water',
+  '喝水': 'water',
 }
 
-function getIcon(message: string): string {
+function getIcon(message: string): ActionType | null {
   for (const [keyword, icon] of Object.entries(iconMap)) {
     if (message.includes(keyword)) {
       return icon
     }
   }
-  return '✅'
+  return null
 }
 
 export function useToast() {
@@ -54,7 +54,7 @@ export function ToastContainer({ toasts, removeToast }: { toasts: ToastItem[]; r
           onClick={() => removeToast(toast.id)}
           className="flex items-center gap-3 px-4 py-3 bg-[var(--color-surface-card)] text-[var(--color-text)] rounded-xl shadow-lg border border-[var(--color-border)] text-sm font-medium animate-fade-in cursor-pointer hover:shadow-xl hover:scale-102 transition-all duration-200"
         >
-          <span className="text-lg">{toast.icon}</span>
+          {toast.icon ? <ActionIcon type={toast.icon} size={18} /> : <span className="text-lg">✅</span>}
           <span>{toast.message}</span>
           <span className="ml-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">×</span>
         </div>

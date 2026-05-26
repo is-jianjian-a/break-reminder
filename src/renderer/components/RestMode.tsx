@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { ActionIcon } from '../utils/ActionIcon'
 
 const encouragements = [
   '久坐伤身，动起来吧 💪',
@@ -90,7 +91,7 @@ export default function RestMode() {
       <div className="bg-white rounded-3xl shadow-lg p-8 w-[400px] border border-gray-200 animate-rest-slide-up">
         {isWalking ? (
           <div className="flex flex-col items-center justify-center gap-6">
-            <div className="text-6xl">🚶</div>
+            <ActionIcon type="walk" size={64} className="text-emerald-500" />
             <div className="text-2xl font-bold text-gray-800">走一走进行中</div>
             <div className="text-6xl font-mono font-bold text-indigo-600 tabular-nums animate-pulse-slow">
               {formatTime(walkElapsed)}
@@ -119,7 +120,7 @@ export default function RestMode() {
                     : 'border-gray-200 bg-gray-50 hover:bg-indigo-50 hover:border-indigo-300 hover:scale-102'
                 }`}
               >
-                <span className="text-5xl">🧍</span>
+                <ActionIcon type="stand" size={48} className="text-indigo-500" />
                 <span className="text-lg font-bold text-gray-700">站一站</span>
               </button>
 
@@ -131,7 +132,7 @@ export default function RestMode() {
                     : 'border-gray-200 bg-gray-50 hover:bg-indigo-50 hover:border-indigo-300 hover:scale-102'
                 }`}
               >
-                <span className="text-5xl">🚶</span>
+                <ActionIcon type="walk" size={48} className="text-emerald-500" />
                 <span className="text-lg font-bold text-gray-700">走一走</span>
               </button>
             </div>
@@ -143,7 +144,7 @@ export default function RestMode() {
                 onChange={(e) => setWaterChecked(e.target.checked)}
                 className="w-7 h-7 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <span className="text-lg text-gray-700">🥤 装个水</span>
+              <span className="text-lg text-gray-700 flex items-center gap-1"><ActionIcon type="water" size={20} className="text-amber-500" /> 装个水</span>
             </label>
 
             <button

@@ -57,7 +57,7 @@ export interface TimerState {
 }
 
 export const ACTION_ICONS: Record<ActionType, string> = {
-  stand: '🧍',
-  walk: '🚶',
-  water: '🥤'
+  stand: 'PersonStanding',
+  walk: 'Footprints',
+  water: 'Droplets'
 }
