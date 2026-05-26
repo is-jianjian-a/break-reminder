@@ -33,7 +33,7 @@ function WalkTimer({ startTime }: { startTime: number }) {
 
   return (
     <div className="flex items-center gap-4">
-      <svg className="w-24 h-24 -rotate-90">
+      <svg className="w-24 h-24 rotate-180">
         <circle
           cx="48"
           cy="48"
