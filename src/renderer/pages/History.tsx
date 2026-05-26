@@ -273,7 +273,7 @@ export default function History() {
                   if (item.type === 'hour') {
                     return (
                       <div key={`h-${item.hour}`} className="relative flex items-center h-4">
-                        <div className="absolute left-[7px] w-3 h-px bg-[var(--color-text-secondary)] opacity-30" />
+                        <div className="absolute left-[7px] w-6 h-px bg-[var(--color-text-secondary)] opacity-30" />
                       </div>
                     )
                   }
