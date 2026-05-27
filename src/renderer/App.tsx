@@ -18,7 +18,9 @@ function AppContent() {
 
   return (
     <div className="flex flex-col h-screen bg-[var(--color-surface)]">
-      <div className="h-6 flex-shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
+      <div className="h-6 flex-shrink-0 flex items-center justify-end px-3" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
+        <span className="text-[10px] text-[var(--color-text-secondary)] opacity-50" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>v1.10</span>
+      </div>
       <div className="flex-shrink-0 flex justify-center -mt-1">
         <svg width="12" height="6" viewBox="0 0 12 6" className="fill-[var(--color-surface-card)]">
           <path d="M0 6 L6 0 L12 6 Z" />
@@ -51,7 +53,6 @@ function AppContent() {
         >
           退出 Break Reminder
         </button>
-        <div className="text-center text-[10px] text-[var(--color-text-secondary)] opacity-40">v1.9.8</div>
       </div>
     </div>
   )
