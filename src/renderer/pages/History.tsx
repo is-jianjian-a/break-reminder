@@ -46,16 +46,22 @@ function adjustDisplayRange(startMin: number, endMin: number, records: ActionRec
   const earliest = Math.min(...times)
   const latest = Math.max(...times)
 
-  const earliestHour = Math.ceil(earliest / 60) * 60
-  const linesAbove = Math.floor((earliestHour - startMin) / 60)
+  const firstHourAfterStart = Math.ceil(startMin / 60) * 60
+  const lastHourBeforeEarliest = Math.floor(earliest / 60) * 60
+  const linesAbove = lastHourBeforeEarliest >= firstHourAfterStart
+    ? Math.floor((lastHourBeforeEarliest - firstHourAfterStart) / 60) + 1
+    : 0
   if (linesAbove > 2) {
-    startMin = earliestHour - 2 * 60
+    startMin = lastHourBeforeEarliest - (2 - 1) * 60
   }
 
-  const latestHour = Math.floor(latest / 60) * 60
-  const linesBelow = Math.floor((endMin - latestHour) / 60)
+  const firstHourAfterLatest = Math.ceil(latest / 60) * 60
+  const lastHourBeforeEnd = Math.floor(endMin / 60) * 60
+  const linesBelow = lastHourBeforeEnd >= firstHourAfterLatest
+    ? Math.floor((lastHourBeforeEnd - firstHourAfterLatest) / 60) + 1
+    : 0
   if (linesBelow > 2) {
-    endMin = latestHour + 2 * 60
+    endMin = firstHourAfterLatest + (2 - 1) * 60
   }
 
   return { startMin, endMin }
