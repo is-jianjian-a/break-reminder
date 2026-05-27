@@ -36,6 +36,31 @@ function getDisplayRange(period: WorkPeriod, index: number) {
   }
 }
 
+function adjustDisplayRange(startMin: number, endMin: number, records: ActionRecord[]) {
+  if (records.length === 0) return { startMin, endMin }
+
+  const times = records.map(r => {
+    const d = new Date(r.timestamp)
+    return d.getHours() * 60 + d.getMinutes()
+  })
+  const earliest = Math.min(...times)
+  const latest = Math.max(...times)
+
+  const earliestHour = Math.ceil(earliest / 60) * 60
+  const linesAbove = Math.floor((earliestHour - startMin) / 60)
+  if (linesAbove > 2) {
+    startMin = earliestHour - 2 * 60
+  }
+
+  const latestHour = Math.floor(latest / 60) * 60
+  const linesBelow = Math.floor((endMin - latestHour) / 60)
+  if (linesBelow > 2) {
+    endMin = latestHour + 2 * 60
+  }
+
+  return { startMin, endMin }
+}
+
 interface TimelineItem {
   type: 'hour' | 'record'
   minutes: number
@@ -253,7 +278,8 @@ export default function History() {
           const periodKey = PERIOD_KEYS[index] || `period-${index}`
           const meta = PERIOD_META[periodKey] || { label: `时段${index + 1}`, emoji: '⏰' }
           const periodRecords = periodRecordsMap.get(period.id) || []
-          const { startMin, endMin } = getDisplayRange(period, index)
+          const baseRange = getDisplayRange(period, index)
+          const { startMin, endMin } = adjustDisplayRange(baseRange.startMin, baseRange.endMin, periodRecords)
           const items = buildTimelineItems(startMin, endMin, periodRecords)
 
           return (
