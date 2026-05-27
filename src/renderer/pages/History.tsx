@@ -39,8 +39,6 @@ function getDisplayRange(period: WorkPeriod, index: number) {
 function adjustDisplayRange(startMin: number, endMin: number, records: ActionRecord[]) {
   if (records.length === 0) return { startMin, endMin }
 
-  const origStart = startMin
-  const origEnd = endMin
   const times = records.map(r => {
     const d = new Date(r.timestamp)
     return d.getHours() * 60 + d.getMinutes()
@@ -48,8 +46,8 @@ function adjustDisplayRange(startMin: number, endMin: number, records: ActionRec
   const earliest = Math.min(...times)
   const latest = Math.max(...times)
 
-  startMin = Math.max(origStart, Math.ceil(earliest / 60) * 60 - 60)
-  endMin = Math.min(origEnd, Math.floor(latest / 60) * 60 + 60)
+  startMin = Math.ceil(earliest / 60) * 60 - 60
+  endMin = Math.floor(latest / 60) * 60 + 60
 
   return { startMin, endMin }
 }
