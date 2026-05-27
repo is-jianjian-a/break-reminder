@@ -46,23 +46,8 @@ function adjustDisplayRange(startMin: number, endMin: number, records: ActionRec
   const earliest = Math.min(...times)
   const latest = Math.max(...times)
 
-  const firstHourAfterStart = Math.ceil(startMin / 60) * 60
-  const lastHourBeforeEarliest = Math.floor(earliest / 60) * 60
-  const linesAbove = lastHourBeforeEarliest >= firstHourAfterStart
-    ? Math.floor((lastHourBeforeEarliest - firstHourAfterStart) / 60) + 1
-    : 0
-  if (linesAbove > 2) {
-    startMin = lastHourBeforeEarliest - (2 - 1) * 60
-  }
-
-  const firstHourAfterLatest = Math.ceil(latest / 60) * 60
-  const lastHourBeforeEnd = Math.floor(endMin / 60) * 60
-  const linesBelow = lastHourBeforeEnd >= firstHourAfterLatest
-    ? Math.floor((lastHourBeforeEnd - firstHourAfterLatest) / 60) + 1
-    : 0
-  if (linesBelow > 2) {
-    endMin = firstHourAfterLatest + (2 - 1) * 60
-  }
+  startMin = Math.ceil(earliest / 60) * 60 - 60
+  endMin = Math.floor(latest / 60) * 60 + 60
 
   return { startMin, endMin }
 }
@@ -76,20 +61,22 @@ interface TimelineItem {
 
 function buildTimelineItems(displayStart: number, displayEnd: number, records: ActionRecord[]): TimelineItem[] {
   const items: TimelineItem[] = []
-  const startH = Math.floor(displayStart / 60)
-  const endH = Math.ceil(displayEnd / 60)
-  for (let h = startH; h <= endH; h++) {
-    const hMin = h * 60
-    if (hMin >= displayStart && hMin <= displayEnd) {
-      items.push({ type: 'hour', minutes: hMin, hour: h })
-    }
-  }
+  const recordMinutes = new Set<number>()
   const grouped = new Map<number, ActionRecord[]>()
   for (const record of records) {
     const d = new Date(record.timestamp)
     const key = d.getHours() * 60 + d.getMinutes()
+    recordMinutes.add(key)
     if (!grouped.has(key)) grouped.set(key, [])
     grouped.get(key)!.push(record)
+  }
+  const startH = Math.floor(displayStart / 60)
+  const endH = Math.ceil(displayEnd / 60)
+  for (let h = startH; h <= endH; h++) {
+    const hMin = h * 60
+    if (hMin >= displayStart && hMin <= displayEnd && !recordMinutes.has(hMin)) {
+      items.push({ type: 'hour', minutes: hMin, hour: h })
+    }
   }
   for (const [minutes, recs] of grouped) {
     items.push({ type: 'record', minutes, records: recs })

@@ -51,6 +51,7 @@ function AppContent() {
         >
           退出 Break Reminder
         </button>
+        <div className="text-center text-[10px] text-[var(--color-text-secondary)] opacity-40">v1.9.8</div>
       </div>
     </div>
   )
