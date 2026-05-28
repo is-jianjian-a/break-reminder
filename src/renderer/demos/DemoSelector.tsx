@@ -9,6 +9,7 @@ export default function DemoSelector() {
     { id: 2, name: '版本 B - 半透明浅色', desc: '浅色背景 + 半透明白玻璃' },
     { id: 3, name: '版本 C - 模糊强玻璃', desc: '高模糊 + 渐变阴影' },
     { id: 4, name: '版本 D - 简洁玻璃', desc: '轻薄玻璃 + 简洁边框' },
+    { id: 5, name: '版本 E - 毛玻璃透视', desc: '系统级 vibrancy + 半透明卡片' },
   ]
 
   return (

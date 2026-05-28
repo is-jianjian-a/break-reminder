@@ -55,8 +55,9 @@ export class WindowManager {
       frame: false,
       alwaysOnTop: true,
       skipTaskbar: true,
-      transparent: false,
-      backgroundColor: '#667eea',
+      transparent: true,
+      backgroundColor: '#00000000',
+      vibrancy: 'under-window',
       hasShadow: false,
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),

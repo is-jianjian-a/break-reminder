@@ -9,6 +9,7 @@ import Demo1 from './demos/Demo1'
 import Demo2 from './demos/Demo2'
 import Demo3 from './demos/Demo3'
 import Demo4 from './demos/Demo4'
+import Demo5 from './demos/Demo5'
 
 function AppContent() {
   const navigate = useNavigate()
@@ -37,6 +38,7 @@ function AppContent() {
           <Route path="/demo/2" element={<Demo2 />} />
           <Route path="/demo/3" element={<Demo3 />} />
           <Route path="/demo/4" element={<Demo4 />} />
+          <Route path="/demo/5" element={<Demo5 />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
