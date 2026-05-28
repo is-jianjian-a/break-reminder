@@ -55,8 +55,7 @@ export class WindowManager {
       frame: false,
       alwaysOnTop: true,
       skipTaskbar: true,
-      transparent: true,
-      backgroundColor: '#00000000',
+      transparent: false,
       vibrancy: 'under-window',
       hasShadow: false,
       webPreferences: {
