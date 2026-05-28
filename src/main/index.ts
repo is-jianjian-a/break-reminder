@@ -19,11 +19,47 @@ let trayManager: TrayManager
 let ipcHandler: IPCHandler
 let isQuitting = false
 let restAutoSkipTimer: ReturnType<typeof setTimeout> | null = null
+let walkStartTime: number = 0
+let walkCheckTimer: ReturnType<typeof setInterval> | null = null
+let lastWalkReminderMin: number = 0
 
 function clearRestAutoSkipTimer(): void {
   if (restAutoSkipTimer) {
     clearTimeout(restAutoSkipTimer)
     restAutoSkipTimer = null
+  }
+}
+
+function startWalkCheck(): void {
+  walkStartTime = Date.now()
+  lastWalkReminderMin = 0
+  if (walkCheckTimer) clearInterval(walkCheckTimer)
+  walkCheckTimer = setInterval(() => {
+    if (isQuitting || !walkStartTime) return
+    const elapsed = Math.floor((Date.now() - walkStartTime) / 60000)
+    if (elapsed > 0 && elapsed % 20 === 0 && elapsed !== lastWalkReminderMin) {
+      lastWalkReminderMin = elapsed
+      if (Notification.isSupported()) {
+        const n = new Notification({
+          title: '🚶 走了好久啦！',
+          body: `已经走了 ${elapsed} 分钟，回来了吗？点击打开主界面`,
+          sound: true
+        })
+        n.on('click', () => {
+          showMainWindow()
+        })
+        n.show()
+      }
+    }
+  }, 10000)
+}
+
+function stopWalkCheck(): void {
+  walkStartTime = 0
+  lastWalkReminderMin = 0
+  if (walkCheckTimer) {
+    clearInterval(walkCheckTimer)
+    walkCheckTimer = null
   }
 }
 
@@ -98,6 +134,7 @@ app.on('before-quit', () => {
   isQuitting = true
   globalShortcut.unregisterAll()
   clearRestAutoSkipTimer()
+  stopWalkCheck()
   timerEngine?.destroy()
   notificationManager?.destroy()
   trayManager?.destroy()
@@ -193,6 +230,7 @@ app.whenReady().then(() => {
       }
     } else if (data.action === 'walk') {
       timerEngine.pauseForWalk()
+      startWalkCheck()
       if (restWindow && !isWindowDestroyed(restWindow)) {
         restWindow.webContents.send('walk-started')
       }
@@ -222,6 +260,7 @@ app.whenReady().then(() => {
 
   ipcMain.on('walk-complete', (_event, durationSec: number) => {
     clearRestAutoSkipTimer()
+    stopWalkCheck()
     const walkStartTime = Date.now() - durationSec * 1000
     storeService.addRecord({ type: 'walk', timestamp: walkStartTime, durationSec })
     timerEngine.resumeFromWalk()
