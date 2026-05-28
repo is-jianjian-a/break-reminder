@@ -88,7 +88,7 @@ export default function RestMode() {
 
   return (
     <div className="rest-root">
-      <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 w-[400px] border border-white/30 animate-rest-slide-up">
+      <div className="rest-card p-8 w-[400px] animate-rest-slide-up">
         {isWalking ? (
           <div className="flex flex-col items-center justify-center gap-6">
             <ActionIcon type="walk" size={64} className="text-emerald-500" />
