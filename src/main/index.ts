@@ -7,7 +7,7 @@ import { StoreService } from './store-service'
 import { WindowManager } from './window-manager'
 import { TrayManager } from './tray-manager'
 import { IPCHandler } from './ipc-handler'
-import { isWindowDestroyed } from './utils'
+import { isWindowDestroyed, safeSend } from './utils'
 
 let mainWindow: BrowserWindow | null = null
 let restWindow: BrowserWindow | null = null
@@ -36,6 +36,10 @@ function startWalkCheck(): void {
   if (walkCheckTimer) clearInterval(walkCheckTimer)
   walkCheckTimer = setInterval(() => {
     if (isQuitting || !walkStartTime) return
+    if (restWindow && !isWindowDestroyed(restWindow) && !restWindow.isVisible()) {
+      restWindow.show()
+      restWindow.focus()
+    }
     const elapsed = Math.floor((Date.now() - walkStartTime) / 60000)
     if (elapsed > 0 && elapsed % 20 === 0 && elapsed !== lastWalkReminderMin) {
       lastWalkReminderMin = elapsed
@@ -70,9 +74,7 @@ function startRestAutoSkipTimer(): void {
     if (restWindow && !isWindowDestroyed(restWindow) && restWindow.isVisible()) {
       notificationManager.dismissReminder(restWindow)
       timerEngine.resetWorkTimer()
-      if (mainWindow && !isWindowDestroyed(mainWindow)) {
-        mainWindow.webContents.send('action-toast', { message: '休息超时，已自动跳过' })
-      }
+      safeSend(mainWindow, 'action-toast', { message: '休息超时，已自动跳过' })
     }
     restAutoSkipTimer = null
   }, 5 * 60 * 1000)
@@ -92,9 +94,7 @@ function triggerRestNow(): void {
   rw.focus()
   if (storeService.getConfig().soundEnabled) { shell.beep() }
   const sendRestMode = () => {
-    if (!isWindowDestroyed(restWindow)) {
-      restWindow!.webContents.send('show-rest-mode')
-    }
+    safeSend(restWindow, 'show-rest-mode')
   }
   if (rw.webContents.isLoading()) {
     rw.webContents.once('did-finish-load', sendRestMode)
@@ -177,8 +177,8 @@ app.whenReady().then(() => {
   }
 
   timerEngine.onTick = (state) => {
-    if (!isQuitting && mainWindow && !isWindowDestroyed(mainWindow)) {
-      mainWindow.webContents.send('timer-tick', state)
+    if (!isQuitting) {
+      safeSend(mainWindow, 'timer-tick', state)
     }
   }
 
@@ -203,18 +203,14 @@ app.whenReady().then(() => {
         notificationManager.dismissReminder(restWindow)
       }
       timerEngine.resetWorkTimer()
-      if (mainWindow && !isWindowDestroyed(mainWindow)) {
-        mainWindow.webContents.send('action-toast', { message: '已跳过本次休息' })
-      }
+      safeSend(mainWindow, 'action-toast', { message: '已跳过本次休息' })
       return
     }
 
     if (data.waterChecked) {
       storeService.addRecord({ type: 'water', timestamp: Date.now() })
-      if (mainWindow && !isWindowDestroyed(mainWindow)) {
-        mainWindow.webContents.send('action-toast', { message: '🥤 已记录装个水' })
-        mainWindow.webContents.send('records-updated')
-      }
+      safeSend(mainWindow, 'action-toast', { message: '🥤 已记录装个水' })
+      safeSend(mainWindow, 'records-updated')
     }
 
     if (data.action === 'stand') {
@@ -224,18 +220,17 @@ app.whenReady().then(() => {
         notificationManager.dismissReminder(restWindow)
       }
       timerEngine.resetWorkTimer()
-      if (mainWindow && !isWindowDestroyed(mainWindow)) {
-        mainWindow.webContents.send('action-toast', { message: '✅ 已记录站一站' })
-        mainWindow.webContents.send('records-updated')
-      }
+      safeSend(mainWindow, 'action-toast', { message: '✅ 已记录站一站' })
+      safeSend(mainWindow, 'records-updated')
     } else if (data.action === 'walk') {
+      clearRestAutoSkipTimer()
       timerEngine.pauseForWalk()
       startWalkCheck()
+      safeSend(restWindow, 'walk-started')
+      safeSend(mainWindow, 'walk-status', { isWalking: true, startTime: Date.now() })
       if (restWindow && !isWindowDestroyed(restWindow)) {
-        restWindow.webContents.send('walk-started')
-      }
-      if (mainWindow && !isWindowDestroyed(mainWindow)) {
-        mainWindow.webContents.send('walk-status', { isWalking: true, startTime: Date.now() })
+        restWindow.show()
+        restWindow.focus()
       }
     }
   })
@@ -268,11 +263,9 @@ app.whenReady().then(() => {
       notificationManager.dismissReminder(restWindow)
     }
     timerEngine.resetWorkTimer()
-    if (mainWindow && !isWindowDestroyed(mainWindow)) {
-      mainWindow.webContents.send('action-toast', { message: '🚶 已记录走一走' })
-      mainWindow.webContents.send('walk-status', { isWalking: false })
-      mainWindow.webContents.send('records-updated')
-    }
+    safeSend(mainWindow, 'action-toast', { message: '🚶 已记录走一走' })
+    safeSend(mainWindow, 'walk-status', { isWalking: false })
+    safeSend(mainWindow, 'records-updated')
   })
 
   ipcMain.on('open-main-window', () => {

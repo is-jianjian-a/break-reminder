@@ -69,7 +69,7 @@ export default function RestMode() {
     ipc()?.send('rest-action', { action: 'walk', waterChecked })
     setTimeout(() => {
       ipc()?.send('display-sleep')
-    }, 3000)
+    }, 2000)
   }, [waterChecked])
 
   const handleWalkComplete = useCallback(() => {

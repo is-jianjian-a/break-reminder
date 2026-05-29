@@ -1,6 +1,6 @@
 import { BrowserWindow, Notification, shell } from 'electron'
 import { AppConfig } from '../shared/types'
-import { isWindowDestroyed } from './utils'
+import { isWindowDestroyed, safeSend } from './utils'
 
 export class NotificationManager {
   private weakTimeout: NodeJS.Timeout | null = null
@@ -54,8 +54,7 @@ export class NotificationManager {
 
   private sendShowRestMode(restWindow: BrowserWindow): void {
     const send = () => {
-      if (isWindowDestroyed(restWindow)) return
-      restWindow.webContents.send('show-rest-mode')
+      safeSend(restWindow, 'show-rest-mode')
     }
     if (restWindow.webContents.isLoading()) {
       restWindow.webContents.once('did-finish-load', send)

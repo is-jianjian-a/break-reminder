@@ -144,13 +144,17 @@ export default function Dashboard() {
             <ActionIcon type="walk" size={20} />
             <span className="text-sm font-medium text-emerald-700">正在走路</span>
           </div>
-          <WalkTimer startTime={walkStatus.startTime!} />
-          <button
-            onClick={() => window.electron?.ipcRenderer.send('walk-complete', Math.floor((Date.now() - walkStatus.startTime!) / 1000))}
-            className="mt-2 px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
-          >
-            结束走路
-          </button>
+          <div className="flex justify-center">
+            <WalkTimer startTime={walkStatus.startTime!} />
+          </div>
+          <div className="flex justify-center">
+            <button
+              onClick={() => window.electron?.ipcRenderer.send('walk-complete', Math.floor((Date.now() - walkStatus.startTime!) / 1000))}
+              className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+            >
+              结束走路
+            </button>
+          </div>
         </div>
       ) : (
         <div className="bg-[var(--color-surface-card)] rounded-xl p-4 shadow-sm border border-[var(--color-border)]">
